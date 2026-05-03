@@ -44,6 +44,7 @@ export const Dashboard: React.FC = () => {
   const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
 
   const [ticketToPrint, setTicketToPrint] = useState<Sale | null>(null);
+  const [ticketToEdit, setTicketToEdit] = useState<Sale | null>(null);
 
   // Calculations
   const totalSales = sales.reduce((acc, sale) => acc + sale.total, 0);
@@ -97,11 +98,11 @@ export const Dashboard: React.FC = () => {
     setShowStockModal(false);
   };
 
-  const addStaff = (name: string) => {
+  const addStaff = (name: string, serviceComm: number, productComm: number) => {
     const newStaff = {
       name,
-      serviceCommission: 0.3,
-      productCommission: 0.1
+      serviceCommission: serviceComm / 100,
+      productCommission: productComm / 100
     };
     setSpecialists(prev => [...prev, newStaff]);
     setShowStaffModal(false);
@@ -398,10 +399,10 @@ export const Dashboard: React.FC = () => {
                                <div className="flex items-center gap-4">
                                   <span className="text-sm font-black text-slate-900 font-mono">${sale.total.toFixed(2)}</span>
                                   <button 
-                                    onClick={() => setTicketToPrint(sale)}
+                                    onClick={() => setTicketToEdit(sale)}
                                     className="p-2 px-4 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-gold-600 hover:bg-gold-500 hover:text-black transition-all"
                                   >
-                                    VER TICKET
+                                    EDITAR TICKET
                                   </button>
                                   <button 
                                      onClick={() => setTicketToDelete(sale.id)}
@@ -977,10 +978,22 @@ export const Dashboard: React.FC = () => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Nombre Completo</label>
                   <input id="staff-name" type="text" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-gold-500 outline-none transition-all" placeholder="Ej. Carlos Ruiz" />
                </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">% Com. Servicios</label>
+                    <input id="staff-service-comm" type="number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none" defaultValue="30" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">% Com. Productos</label>
+                    <input id="staff-product-comm" type="number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none" defaultValue="10" />
+                  </div>
+               </div>
                <button 
                  onClick={() => {
-                   const input = document.getElementById('staff-name') as HTMLInputElement;
-                   if (input.value) addStaff(input.value);
+                   const name = (document.getElementById('staff-name') as HTMLInputElement).value;
+                   const sComm = (document.getElementById('staff-service-comm') as HTMLInputElement).value;
+                   const pComm = (document.getElementById('staff-product-comm') as HTMLInputElement).value;
+                   if (name) addStaff(name, parseFloat(sComm), parseFloat(pComm));
                  }}
                  className="w-full py-4 bg-slate-900 text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-black/10"
                >
@@ -1271,6 +1284,80 @@ export const Dashboard: React.FC = () => {
               >
                 Cerrar Ticket
               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+      {/* MODAL: EDITAR TICKET */}
+      {ticketToEdit && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+          >
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Editar Ticket #{ticketToEdit.id}</h3>
+            <div className="space-y-4">
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Servicio</label>
+                  <input 
+                    id="edit-service" type="text" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" 
+                    defaultValue={ticketToEdit.service} 
+                  />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Precio Servicio ($)</label>
+                    <input 
+                      id="edit-service-price" type="number" 
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black" 
+                      defaultValue={ticketToEdit.servicePrice} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Precio Prod. ($)</label>
+                    <input 
+                      id="edit-product-price" type="number" 
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black" 
+                      defaultValue={ticketToEdit.productPrice} 
+                    />
+                  </div>
+               </div>
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Especialista</label>
+                  <select id="edit-spec" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" defaultValue={ticketToEdit.specialist}>
+                    {specialists.map(s => <option key={s.name}>{s.name}</option>)}
+                  </select>
+               </div>
+               <button 
+                 onClick={() => {
+                   const service = (document.getElementById('edit-service') as HTMLInputElement).value;
+                   const sPrice = (document.getElementById('edit-service-price') as HTMLInputElement).value;
+                   const pPrice = (document.getElementById('edit-product-price') as HTMLInputElement).value;
+                   const specialist = (document.getElementById('edit-spec') as HTMLSelectElement).value;
+                   
+                   const updatedSales = sales.map(s => 
+                     s.id === ticketToEdit.id 
+                       ? { 
+                           ...s, 
+                           service, 
+                           servicePrice: parseFloat(sPrice), 
+                           productPrice: parseFloat(pPrice), 
+                           total: parseFloat(sPrice) + parseFloat(pPrice),
+                           specialist 
+                         } 
+                       : s
+                   );
+                   setSales(updatedSales);
+                   setTicketToEdit(null);
+                   alert('Ticket actualizado correctamente en la bóveda.');
+                 }}
+                 className="w-full py-4 bg-gold-500 text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-gold-500 transition-all shadow-xl shadow-gold-500/20"
+               >
+                 Guardar Cambios
+               </button>
+               <button onClick={() => setTicketToEdit(null)} className="w-full py-2 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
             </div>
           </motion.div>
         </div>
