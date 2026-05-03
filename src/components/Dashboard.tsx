@@ -10,7 +10,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import { APPOINTMENTS, SALES, SPECIALISTS, PENDING_PAYMENTS, INVENTORY, EXPENSES, MONTHLY_GOALS } from '../data';
-import { UserRole } from '../types';
+import { UserRole, Sale } from '../types';
 import { PWAGuide } from './PWAGuide';
 import { SplashScreen } from './SplashScreen';
 import { ProposalView } from './ProposalView';
@@ -34,9 +34,16 @@ export const Dashboard: React.FC = () => {
   const [specialists, setSpecialists] = useState(SPECIALISTS);
   const [inventory, setInventory] = useState(INVENTORY);
   const [sales, setSales] = useState(SALES);
+  const [appointments, setAppointments] = useState(APPOINTMENTS);
+  const [expenses, setExpenses] = useState(EXPENSES);
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [showStockModal, setShowStockModal] = useState(false);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showSaleModal, setShowSaleModal] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
+
+  const [ticketToPrint, setTicketToPrint] = useState<Sale | null>(null);
 
   // Calculations
   const totalSales = sales.reduce((acc, sale) => acc + sale.total, 0);
@@ -44,15 +51,15 @@ export const Dashboard: React.FC = () => {
     const specSales = sales.filter(s => s.specialist === spec.name);
     const serviceTotal = specSales.reduce((acc, s) => acc + s.servicePrice, 0);
     const productTotal = specSales.reduce((acc, s) => acc + s.productPrice, 0);
-    return acc + (serviceTotal * spec.serviceCommission) + (productTotal * spec.productCommission);
+    return acc + (serviceTotal * (spec.serviceCommission || 0.3)) + (productTotal * (spec.productCommission || 0.1));
   }, 0);
   
   const commissionSummary = specialists.map(spec => {
     const specSales = sales.filter(s => s.specialist === spec.name);
     const serviceTotal = specSales.reduce((acc, s) => acc + s.servicePrice, 0);
     const productTotal = specSales.reduce((acc, s) => acc + s.productPrice, 0);
-    const serviceCommission = serviceTotal * spec.serviceCommission;
-    const productCommission = productTotal * spec.productCommission;
+    const serviceCommission = serviceTotal * (spec.serviceCommission || 0.3);
+    const productCommission = productTotal * (spec.productCommission || 0.1);
     
     return {
       name: spec.name,
@@ -62,16 +69,17 @@ export const Dashboard: React.FC = () => {
     };
   });
 
-  const totalExpenses = EXPENSES.reduce((acc, e) => acc + e.amount, 0);
+  const totalExpenses = expenses.reduce((acc, e) => acc + e.amount, 0);
   const netUtility = totalSales - totalCommissions - totalExpenses;
 
   // Specialists Performance
-  const specialistGoals = MONTHLY_GOALS.map(goal => {
-    const comm = commissionSummary.find(c => c.name === goal.specialist);
+  const specialistGoals = specialists.map(spec => {
+    const goal = MONTHLY_GOALS.find(g => g.specialist === spec.name) || { target: 5000, current: 0 };
+    const comm = commissionSummary.find(c => c.name === spec.name);
     const todaySales = comm ? comm.serviceTotal + comm.productTotal : 0;
-    const totalWithToday = goal.current + todaySales;
-    const percentage = (totalWithToday / goal.target) * 100;
-    return { ...goal, todaySales, totalWithToday, percentage };
+    const totalWithToday = (goal.current || 0) + todaySales;
+    const percentage = ((totalWithToday / (goal.target || 5000)) * 100);
+    return { ...goal, specialist: spec.name, todaySales, totalWithToday, percentage: isNaN(percentage) ? 0 : percentage };
   });
 
   // Actions
@@ -93,11 +101,78 @@ export const Dashboard: React.FC = () => {
     const newStaff = {
       name,
       serviceCommission: 0.3,
-      productCommission: 0.1,
-      target: 50000
+      productCommission: 0.1
     };
     setSpecialists(prev => [...prev, newStaff]);
     setShowStaffModal(false);
+  };
+
+  const removeStaff = (name: string) => {
+    setSpecialists(prev => prev.filter(s => s.name !== name));
+  };
+
+  const completeAndCharge = (appId: string) => {
+    const app = appointments.find(a => a.id === appId);
+    if (!app) return;
+
+    setAppointments(prev => prev.map(a => a.id === appId ? { ...a, status: 'Completada' } : a));
+    
+    // Auto-register sale for the completed service
+    const servicePrice = app.service.toLowerCase().includes('corte') ? 60 : app.service.toLowerCase().includes('balayage') ? 150 : 80;
+    registerSale(app.service, servicePrice, app.specialist);
+  };
+
+  const addAppointment = (name: string, service: string, specName: string, time: string) => {
+    const newApp = {
+      id: `APP-${Date.now()}`,
+      name,
+      service,
+      specialist: specName,
+      time,
+      status: 'Pendiente' as const
+    };
+    setAppointments(prev => [newApp, ...prev]);
+    setShowAppointmentModal(false);
+  };
+
+  const addExpense = (description: string, amount: number) => {
+    const newExp = {
+      description,
+      amount,
+      date: 'HOY'
+    };
+    setExpenses(prev => [newExp, ...prev]);
+    setShowExpenseModal(false);
+  };
+
+  const registerSale = (service: string, price: number, specName: string) => {
+    const nextId = sales.length > 0 ? parseInt(sales[0].id.replace('S', '')) + 1 : 101;
+    const newSale: Sale = {
+      id: `S${nextId}`,
+      service,
+      servicePrice: price,
+      extraProducts: [],
+      productPrice: 0,
+      total: price,
+      paymentMethod: 'Efectivo',
+      specialist: specName,
+      date: 'HOY',
+      loyaltyPoints: Math.floor(price / 10)
+    };
+    setSales(prev => [newSale, ...prev]);
+    
+    // Impact inventory if service keywords match
+    setInventory(prev => prev.map(item => {
+      const isMatch = service.toLowerCase().includes(item.name.toLowerCase().split(' ')[0]);
+      if (isMatch) {
+         return { ...item, currentStock: Math.max(0, item.currentStock - 1), soldToday: item.soldToday + 1 };
+      }
+      return item;
+    }));
+
+    setShowSaleModal(false);
+    // Auto-select for printing simulation
+    setTicketToPrint(newSale);
   };
 
   // Specialist View Data (Ana)
@@ -273,7 +348,12 @@ export const Dashboard: React.FC = () => {
                         <h3 className="text-slate-900 font-black uppercase text-sm tracking-widest">Reporte Financiero Intra-Día</h3>
                         <p className="text-[10px] text-slate-400 font-bold uppercase italic">Balance Activo vs Gastos</p>
                       </div>
-                      <button className="p-2 px-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-900 uppercase tracking-widest hover:bg-gold-500 hover:text-black transition-all">Exportar PDF</button>
+                      <button 
+                        onClick={() => sales.length > 0 && setTicketToPrint(sales[0])}
+                        className="p-2 px-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-900 uppercase tracking-widest hover:bg-gold-500 hover:text-black transition-all"
+                      >
+                        Simular Impresora
+                      </button>
                     </div>
                     <div className="h-[320px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
@@ -317,7 +397,12 @@ export const Dashboard: React.FC = () => {
                                </div>
                                <div className="flex items-center gap-4">
                                   <span className="text-sm font-black text-slate-900 font-mono">${sale.total.toFixed(2)}</span>
-                                  <button className="p-2 px-4 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-gold-600 hover:bg-gold-500 hover:text-black transition-all">EDITAR TICKET</button>
+                                  <button 
+                                    onClick={() => setTicketToPrint(sale)}
+                                    className="p-2 px-4 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-gold-600 hover:bg-gold-500 hover:text-black transition-all"
+                                  >
+                                    VER TICKET
+                                  </button>
                                   <button 
                                      onClick={() => setTicketToDelete(sale.id)}
                                      className="p-2 text-rose-400 hover:text-rose-600 transition-colors"
@@ -345,25 +430,62 @@ export const Dashboard: React.FC = () => {
                     </div>
                     <div className="space-y-6">
                       {specialists.map((spec, i) => (
-                        <div key={i} className="space-y-2">
+                        <div key={i} className="space-y-4 group p-4 border border-slate-50 rounded-2xl hover:border-gold-500/20 transition-all">
                            <div className="flex justify-between items-center">
-                              <p className="text-xs font-black text-slate-900">{spec.name}</p>
-                              <p className="text-[10px] font-mono text-gold-600 font-black">{(spec.serviceCommission * 100).toFixed(0)}%</p>
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-[10px] text-gold-500 font-black">{spec.name[0]}</div>
+                                <div>
+                                  <p className="text-xs font-black text-slate-900">{spec.name}</p>
+                                  <p className="text-[9px] text-slate-400 font-bold uppercase">Nivel: Senior</p>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  removeStaff(spec.name);
+                                  alert(`Staff ${spec.name} dado de baja del sistema.`);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-2 text-rose-400 hover:text-rose-600 transition-all"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                            </div>
-                           <div className="h-1.5 w-full bg-slate-100 rounded-full relative overflow-hidden group">
-                              <div className="absolute inset-y-0 left-0 bg-gold-500 rounded-full" style={{ width: `${spec.serviceCommission * 100}%` }}></div>
-                              <input 
-                                type="range" 
-                                className="absolute inset-0 opacity-100 cursor-pointer accent-gold-500" 
-                                min="0" max="1" step="0.05" 
-                                value={spec.serviceCommission}
-                                onChange={(e) => handleCommissionChange(spec.name, parseFloat(e.target.value))}
-                              />
+                           
+                           <div className="space-y-2">
+                             <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                               <span className="text-slate-400">Comisión Servicios</span>
+                               <span className="text-gold-600">{(spec.serviceCommission * 100).toFixed(0)}%</span>
+                             </div>
+                             <div className="h-1.5 w-full bg-slate-100 rounded-full relative overflow-hidden">
+                                <div className="absolute inset-y-0 left-0 bg-gold-500 rounded-full" style={{ width: `${spec.serviceCommission * 100}%` }}></div>
+                                <input 
+                                  type="range" 
+                                  className="absolute inset-0 opacity-0 cursor-pointer" 
+                                  min="0" max="0.5" step="0.05" 
+                                  value={spec.serviceCommission}
+                                  onChange={(e) => handleCommissionChange(spec.name, parseFloat(e.target.value))}
+                                />
+                             </div>
+                           </div>
+
+                           <div className="flex gap-4 pt-2">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                 <input type="checkbox" defaultChecked className="w-3 h-3 accent-gold-500" />
+                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Agenda</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                 <input type="checkbox" defaultChecked className="w-3 h-3 accent-gold-500" />
+                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Comisiones</span>
+                              </label>
                            </div>
                         </div>
                       ))}
                       <div className="pt-4 space-y-4">
-                        <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gold-500 hover:text-black transition-all">Guardar Cambios</button>
+                        <button 
+                          onClick={() => alert('Configuración Global de Comisiones y Permisos Guardada Exitosamente.')}
+                          className="w-full py-4 bg-slate-900 text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg"
+                        >
+                          Guardar Cambios Globales
+                        </button>
                         <button 
                            onClick={() => setShowStaffModal(true)}
                            className="w-full py-4 border-2 border-dashed border-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-gold-500 hover:text-gold-600 transition-all flex items-center justify-center gap-3"
@@ -436,12 +558,12 @@ export const Dashboard: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors"><BarChart3 className="w-4 h-4 text-slate-400" /></button>
-                        <span className="text-[10px] font-black text-white bg-slate-900 px-3 py-1 rounded-full">{APPOINTMENTS.length} HOY</span>
+                        <span className="text-[10px] font-black text-white bg-slate-900 px-3 py-1 rounded-full">{appointments.length} HOY</span>
                       </div>
                    </div>
                    <div className="p-6 overflow-y-auto max-h-[500px]">
                       <div className="space-y-3">
-                        {APPOINTMENTS.map((app) => (
+                        {appointments.map((app) => (
                           <div key={app.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-gold-500/30 transition-all hover:shadow-md group">
                              <div className="flex items-center gap-4">
                                 <div className="min-w-[60px] text-center p-2 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-gold-50 transition-colors">
@@ -468,7 +590,10 @@ export const Dashboard: React.FC = () => {
                           </div>
                         ))}
                       </div>
-                      <button className="w-full mt-6 py-4 bg-slate-900 text-gold-500 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:scale-[1.01] transition-all shadow-xl shadow-black/5">
+                      <button 
+                        onClick={() => setShowAppointmentModal(true)}
+                        className="w-full mt-6 py-4 bg-slate-900 text-gold-500 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:scale-[1.01] transition-all shadow-xl shadow-black/5"
+                      >
                         <PlusCircle className="w-4 h-4" /> Nueva Reservación
                       </button>
                    </div>
@@ -486,7 +611,10 @@ export const Dashboard: React.FC = () => {
                     </div>
                     
                     <div className="space-y-6 relative z-10">
-                      <div className="p-6 bg-slate-50 border border-slate-200 rounded-[24px] border-dashed flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-gold-500/5 hover:border-gold-500/30 transition-all">
+                      <div 
+                        onClick={() => setShowSaleModal(true)}
+                        className="p-6 bg-slate-50 border border-slate-200 rounded-[24px] border-dashed flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-gold-500/5 hover:border-gold-500/30 transition-all"
+                      >
                          <div className="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
                             <PlusCircle className="w-6 h-6 text-gold-500" />
                          </div>
@@ -495,10 +623,16 @@ export const Dashboard: React.FC = () => {
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
-                         <button className="p-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-600 hover:border-gold-500 transition-all flex flex-col items-center gap-2">
+                         <button 
+                            onClick={() => sales.length > 0 && setTicketToPrint(sales[0])}
+                            className="p-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-600 hover:border-gold-500 transition-all flex flex-col items-center gap-2"
+                         >
                             <Printer className="w-5 h-5 text-slate-400" /> Reimprimir Ticket
                          </button>
-                         <button className="p-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-600 hover:border-gold-500 transition-all flex flex-col items-center gap-2">
+                         <button 
+                            onClick={() => setShowCierre(true)}
+                            className="p-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-600 hover:border-gold-500 transition-all flex flex-col items-center gap-2"
+                          >
                             <LogOut className="w-5 h-5 text-rose-400" /> Cerrar Caja
                          </button>
                       </div>
@@ -547,10 +681,15 @@ export const Dashboard: React.FC = () => {
                          <p className="text-[10px] text-slate-400 font-bold uppercase">Registro de Egresos Diarios</p>
                        </div>
                     </div>
-                    <button className="p-2 px-6 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Reportar Gasto</button>
+                    <button 
+                      onClick={() => setShowExpenseModal(true)}
+                      className="p-2 px-6 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
+                    >
+                      Reportar Gasto
+                    </button>
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {EXPENSES.map((exp, i) => (
+                    {expenses.map((exp, i) => (
                       <div key={i} className="flex justify-between items-center p-5 bg-slate-50 rounded-2xl border border-slate-100 group">
                          <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-rose-500"><LogOut className="w-4 h-4 rotate-180" /></div>
@@ -599,11 +738,11 @@ export const Dashboard: React.FC = () => {
                           <Calendar className="w-5 h-5 text-gold-600" />
                           <h3 className="text-slate-900 font-black uppercase text-sm tracking-widest">Mi Agenda de Hoy</h3>
                        </div>
-                       <span className="text-[10px] font-black text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full">{APPOINTMENTS.filter(a => a.specialist === 'Ana').length} CITAS</span>
+                       <span className="text-[10px] font-black text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full">{appointments.filter(a => a.specialist === 'Ana').length} CITAS</span>
                     </div>
                     <div className="p-0">
                        <div className="divide-y divide-slate-100">
-                          {APPOINTMENTS.filter(a => a.specialist === 'Ana').map((app) => (
+                          {appointments.filter(a => a.specialist === 'Ana').map((app) => (
                             <div key={app.id} className="p-8 hover:bg-slate-50/50 transition-all group">
                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                   <div className="flex items-center gap-6">
@@ -631,7 +770,10 @@ export const Dashboard: React.FC = () => {
                                           <CheckSquare className="w-4 h-4" /> Finalizado
                                        </div>
                                      ) : (
-                                       <button className="w-full md:w-auto px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gold-500 hover:text-black transition-all">
+                                       <button 
+                                         onClick={() => completeAndCharge(app.id)}
+                                         className="w-full md:w-auto px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gold-500 hover:text-black transition-all"
+                                       >
                                           Iniciar / Cobrar
                                        </button>
                                      )}
@@ -727,7 +869,10 @@ export const Dashboard: React.FC = () => {
                      <div className="relative z-10">
                         <h3 className="text-4xl font-black italic tracking-tighter mb-4">¿Lista para brillar?</h3>
                         <p className="text-slate-400 text-sm max-w-md font-medium leading-relaxed mb-8">Reserva tu próximo servicio en segundos. Tenemos espacios disponibles para este fin de semana.</p>
-                        <button className="px-8 py-4 bg-gold-500 text-black rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-gold-500/20">
+                        <button 
+                           onClick={() => setShowAppointmentModal(true)}
+                           className="px-8 py-4 bg-gold-500 text-black rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-gold-500/20"
+                        >
                            Reservar Ahora
                         </button>
                      </div>
@@ -737,12 +882,12 @@ export const Dashboard: React.FC = () => {
                   <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
                     <h3 className="text-slate-900 font-black uppercase text-xs tracking-widest mb-6">Mis Próximas Citas</h3>
                     <div className="space-y-4">
-                       {APPOINTMENTS.filter(a => a.name === 'Laura Martínez' && a.status === 'Pendiente').length === 0 ? (
+                       {appointments.filter(a => a.name === 'Laura Martínez' && a.status === 'Pendiente').length === 0 ? (
                          <div className="py-12 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                             <p className="text-xs text-slate-400 font-bold uppercase">No tienes citas próximas</p>
                          </div>
                        ) : (
-                          APPOINTMENTS.filter(a => a.name === 'Laura Martínez' && a.status === 'Pendiente').map(app => (
+                          appointments.filter(a => a.name === 'Laura Martínez' && a.status === 'Pendiente').map(app => (
                             <div key={app.id} className="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-gold-500/30 transition-all">
                                <div className="flex items-center gap-6">
                                   <div className="text-center font-mono">
@@ -774,12 +919,12 @@ export const Dashboard: React.FC = () => {
                          <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Mi Historial</h4>
                       </div>
                       <div className="space-y-6">
-                         {SALES.slice(0, 3).map((sale, i) => (
+                         {sales.slice(0, 3).map((sale, i) => (
                            <div key={i} className="flex items-start gap-4">
                               <div className="mt-1 w-2 h-2 bg-gold-500 rounded-full shrink-0"></div>
                               <div>
                                  <p className="text-xs font-black text-slate-900 uppercase">{sale.service}</p>
-                                 <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">Viernes, 28 Abr • {sale.specialist}</p>
+                                 <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">{sale.date} • {sale.specialist}</p>
                                  <p className="text-[9px] text-emerald-600 font-black mt-1">+{sale.loyaltyPoints} PUNTOS GANADOS</p>
                               </div>
                            </div>
@@ -922,6 +1067,210 @@ export const Dashboard: React.FC = () => {
                    Mantener Registro
                  </button>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: NUEVA CITA */}
+      {showAppointmentModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+          >
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Nueva Reservación</h3>
+            <div className="space-y-4">
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Cliente</label>
+                  <input id="app-name" type="text" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Nombre del cliente" />
+               </div>
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Servicio</label>
+                  <select id="app-service" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm italic">
+                    <option>Corte Dama</option>
+                    <option>Color Completo</option>
+                    <option>Balayage</option>
+                    <option>Peinado</option>
+                  </select>
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Especialista</label>
+                    <select id="app-spec" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm">
+                      {specialists.map(s => <option key={s.name}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hora</label>
+                    <input id="app-time" type="time" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" defaultValue="14:00" />
+                  </div>
+               </div>
+               <button 
+                 onClick={() => {
+                   const n = (document.getElementById('app-name') as HTMLInputElement).value;
+                   const s = (document.getElementById('app-service') as HTMLSelectElement).value;
+                   const sp = (document.getElementById('app-spec') as HTMLSelectElement).value;
+                   const t = (document.getElementById('app-time') as HTMLInputElement).value;
+                   if(n) addAppointment(n, s, sp, t);
+                 }}
+                 className="w-full py-4 bg-slate-900 text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-black/10"
+               >
+                 Confirmar Cita
+               </button>
+               <button onClick={() => setShowAppointmentModal(false)} className="w-full py-2 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: REGISTRAR GASTO */}
+      {showExpenseModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+          >
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Reportar Egreso</h3>
+            <div className="space-y-4">
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Descripción</label>
+                  <input id="exp-desc" type="text" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="Ej. Pago de Luz" />
+               </div>
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Monto ($)</label>
+                  <input id="exp-amount" type="number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" placeholder="0.00" />
+               </div>
+               <button 
+                 onClick={() => {
+                   const d = (document.getElementById('exp-desc') as HTMLInputElement).value;
+                   const a = (document.getElementById('exp-amount') as HTMLInputElement).value;
+                   if(d && a) addExpense(d, parseFloat(a));
+                 }}
+                 className="w-full py-4 bg-rose-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-xl shadow-rose-500/20"
+               >
+                 Registrar Salida de Caja
+               </button>
+               <button onClick={() => setShowExpenseModal(false)} className="w-full py-2 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: REGISTRAR VENTA */}
+      {showSaleModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-sm shadow-2xl border border-slate-100"
+          >
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Cobro Rápido</h3>
+            <div className="space-y-4">
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Servicio / Producto</label>
+                  <input id="sale-service" type="text" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" defaultValue="Corte Express" />
+               </div>
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Especialista</label>
+                  <select id="sale-spec" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm">
+                    {specialists.map(s => <option key={s.name}>{s.name}</option>)}
+                  </select>
+               </div>
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Total a Cobrar ($)</label>
+                  <input id="sale-price" type="number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black" defaultValue="350" />
+               </div>
+               <button 
+                 onClick={() => {
+                   const s = (document.getElementById('sale-service') as HTMLInputElement).value;
+                   const p = (document.getElementById('sale-price') as HTMLInputElement).value;
+                   const sp = (document.getElementById('sale-spec') as HTMLSelectElement).value;
+                   if(s && p) registerSale(s, parseFloat(p), sp);
+                 }}
+                 className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20"
+               >
+                 Emitir Ticket
+               </button>
+               <button onClick={() => setShowSaleModal(false)} className="w-full py-2 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: SIMULACIÓN DE IMPRESIÓN DE TICKET */}
+      {ticketToPrint && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-white rounded-xl p-8 w-full max-w-[350px] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] font-mono text-slate-900 border-t-8 border-gold-500 relative"
+          >
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-1 bg-slate-200 rounded-full opacity-50"></div>
+            
+            <div className="text-center mb-8">
+              <img src="https://cossma.com.mx/glamstudio.png" className="h-12 mx-auto grayscale mb-4" alt="Logo" />
+              <p className="text-[10px] font-black uppercase tracking-widest">Glam Studio MGMT</p>
+              <p className="text-[8px] text-slate-400">RFC: GSL-260530-X01</p>
+              <div className="border-b border-dashed border-slate-200 my-4"></div>
+            </div>
+
+            <div className="space-y-2 text-[10px] uppercase font-bold">
+              <div className="flex justify-between"><span>Ticket:</span> <span>#{ticketToPrint.id}</span></div>
+              <div className="flex justify-between"><span>Fecha:</span> <span>{new Date().toLocaleDateString()}</span></div>
+              <div className="flex justify-between"><span>Hora:</span> <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+              <div className="flex justify-between"><span>Especialista:</span> <span>{ticketToPrint.specialist}</span></div>
+            </div>
+
+            <div className="border-b border-dashed border-slate-200 my-6"></div>
+
+            <div className="space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="w-2/3">
+                  <p className="text-[11px] font-black">{ticketToPrint.service}</p>
+                  <p className="text-[9px] text-slate-400">Servicio Profesional</p>
+                </div>
+                <p className="text-[11px] font-black">${ticketToPrint.servicePrice.toFixed(2)}</p>
+              </div>
+              
+              {ticketToPrint.extraProducts.map((prod, i) => (
+                <div key={i} className="flex justify-between items-start">
+                  <div className="w-2/3">
+                    <p className="text-[11px] font-black">{prod}</p>
+                  </div>
+                  <p className="text-[11px] font-black">Incluido</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-b border-slate-900 my-6"></div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-black">
+                <span>TOTAL</span>
+                <span className="text-sm">${ticketToPrint.total.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-[9px] text-slate-400">
+                <span>PAGO: {ticketToPrint.paymentMethod}</span>
+                <span>PUNTOS: +{ticketToPrint.loyaltyPoints}</span>
+              </div>
+            </div>
+
+            <div className="mt-10 text-center space-y-4">
+              <div className="flex justify-center gap-1">
+                {[...Array(20)].map((_, i) => (
+                  <div key={i} className={`h-1 w-1 rounded-full ${i % 3 === 0 ? 'bg-slate-900' : 'bg-slate-200'}`}></div>
+                ))}
+              </div>
+              <p className="text-[8px] font-black uppercase text-slate-400">¡Gracias por visitarnos!</p>
+              <button 
+                onClick={() => setTicketToPrint(null)}
+                className="w-full py-4 bg-slate-900 text-gold-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
+              >
+                Cerrar Ticket
+              </button>
             </div>
           </motion.div>
         </div>
