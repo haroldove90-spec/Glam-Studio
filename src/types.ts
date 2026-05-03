@@ -1,5 +1,5 @@
 
-export type UserRole = 'Especialista' | 'Recepcion' | 'Administrador';
+export type UserRole = 'especialista' | 'recepcion' | 'admin';
 
 export interface Appointment {
   id: string;

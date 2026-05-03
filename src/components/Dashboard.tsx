@@ -3,14 +3,32 @@ import { motion } from 'motion/react';
 import { 
   Calendar, CircleDollarSign, Scissors, UserCheck, Wallet, ChevronRight, 
   BarChart3, Package, CreditCard, ShieldCheck, TrendingUp, AlertCircle, 
-  CheckSquare, Printer, Settings, LogOut, Info
+  CheckSquare, Printer, Settings, LogOut, Info, Smartphone, FileText, 
+  UserPlus, Settings2, PlusCircle, DollarSign, Activity, Trash2, Shield
 } from 'lucide-react';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
 import { APPOINTMENTS, SALES, SPECIALISTS, PENDING_PAYMENTS, INVENTORY, EXPENSES, MONTHLY_GOALS } from '../data';
 import { UserRole } from '../types';
+import { PWAGuide } from './PWAGuide';
+import { SplashScreen } from './SplashScreen';
+import { ProposalView } from './ProposalView';
+
+const REVENUE_DATA = [
+  { name: '10:00', total: 4500 },
+  { name: '12:00', total: 8200 },
+  { name: '14:00', total: 6100 },
+  { name: '16:00', total: 12500 },
+  { name: '18:00', total: 15800 },
+  { name: '20:00', total: 21400 },
+];
 
 export const Dashboard: React.FC = () => {
-  const [currentRole, setCurrentRole] = useState<UserRole>('Administrador');
+  const [currentRole, setCurrentRole] = useState<UserRole>('admin');
   const [showCierre, setShowCierre] = useState(false);
+  const [showPWAInfo, setShowPWAInfo] = useState(false);
+  const [showProposal, setShowProposal] = useState(false);
 
   // Calculations
   const totalSales = SALES.reduce((acc, sale) => acc + sale.total, 0);
@@ -21,7 +39,6 @@ export const Dashboard: React.FC = () => {
     const specSales = SALES.filter(s => s.specialist === spec.name);
     const serviceTotal = specSales.reduce((acc, s) => acc + s.servicePrice, 0);
     const productTotal = specSales.reduce((acc, s) => acc + s.productPrice, 0);
-    
     const serviceCommission = serviceTotal * spec.serviceCommission;
     const productCommission = productTotal * spec.productCommission;
     
@@ -37,7 +54,7 @@ export const Dashboard: React.FC = () => {
   const totalExpenses = EXPENSES.reduce((acc, e) => acc + e.amount, 0);
   const netUtility = totalSales - totalCommissions - totalExpenses;
 
-  // Specialists Performance (Today's impact on monthly goals)
+  // Specialists Performance
   const specialistGoals = MONTHLY_GOALS.map(goal => {
     const comm = commissionSummary.find(c => c.name === goal.specialist);
     const todaySales = comm ? comm.serviceTotal + comm.productTotal : 0;
@@ -52,416 +69,465 @@ export const Dashboard: React.FC = () => {
 
   if (showCierre) {
     return (
-      <div className="w-full max-w-[900px] min-h-screen bg-white font-sans text-slate-800 flex flex-col p-8 md:p-16 mx-auto shadow-2xl my-12 rounded-3xl border border-slate-100">
+      <div className="w-full max-w-[900px] min-h-screen bg-white font-sans text-slate-900 flex flex-col p-8 md:p-16 mx-auto shadow-2xl my-12 rounded-3xl border border-slate-100">
         <header className="flex flex-col items-center text-center mb-12">
           <img 
             src="https://cossma.com.mx/glamstudio.png" 
             alt="Glam Studio Logo" 
-            className="h-24 object-contain mb-6 grayscale hover:grayscale-0 transition-all duration-500" 
+            className="h-24 object-contain mb-6 grayscale" 
           />
-          <h1 className="text-2xl font-black tracking-[0.3em] uppercase border-y-2 border-slate-900 py-2 px-8">Reporte de Cierre de Turno</h1>
+          <h1 className="text-2xl font-black tracking-[0.3em] uppercase border-y-2 border-gold-500 py-3 px-8 text-slate-900">Reporte de Cierre de Turno</h1>
           <p className="mt-4 font-mono text-[10px] uppercase text-slate-400">Fecha de Emisión: {new Date().toLocaleDateString('es-MX')} | 10:00 PM</p>
         </header>
 
         <button 
           onClick={() => setShowCierre(false)}
-          className="absolute top-8 right-8 p-3 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors group"
-          title="Volver"
+          className="absolute top-8 right-8 p-3 bg-slate-50 border border-slate-200 hover:bg-gold-100 rounded-full transition-colors group"
         >
-          <LogOut className="w-5 h-5 text-slate-400 group-hover:text-slate-900" />
+          <LogOut className="w-5 h-5 text-slate-400 group-hover:text-gold-600" />
         </button>
 
         <div className="space-y-12">
-          {/* Incidences Section */}
           <section>
-            <h2 className="text-xs font-black uppercase tracking-widest text-pink-500 mb-4 flex items-center gap-2">
+            <h2 className="text-xs font-black uppercase tracking-widest text-gold-600 mb-4 flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               Incidencias y Ajustes del Día
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-pink-50 border border-pink-100 rounded-xl">
-                <p className="text-[10px] font-bold text-pink-600 uppercase mb-1">Cancelación de Último Minuto</p>
+              <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 opacity-60">Cancelación de Último Minuto</p>
                 <div className="flex justify-between items-end">
                   <div>
                     <p className="font-bold text-slate-900 text-sm">Servicio: Pestañas</p>
-                    <p className="text-xs text-slate-500 italic">Especialista: Roberto</p>
+                    <p className="text-xs text-slate-500 italic">Roberto</p>
                   </div>
-                  <span className="text-lg font-black text-pink-700">-$800.00</span>
+                  <span className="text-lg font-black text-rose-500">-$800.00</span>
                 </div>
               </div>
-              <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
-                <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Gasto Imprevisto</p>
+              <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 opacity-60">Gasto Imprevisto</p>
                 <div className="flex justify-between items-end">
                   <div>
                     <p className="font-bold text-slate-900 text-sm">Reparación de Secadora</p>
-                    <p className="text-xs text-slate-400 italic">Técnico especializado</p>
+                    <p className="text-xs text-slate-500 italic">Técnico especializado</p>
                   </div>
-                  <span className="text-lg font-black text-slate-900">-$350.00</span>
+                  <span className="text-lg font-black text-rose-500">-$350.00</span>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Role Summaries */}
           <div className="grid grid-cols-1 gap-12 border-t border-slate-100 pt-12">
-            
-            {/* View: Administrator */}
             <div className="space-y-4">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4" />
                 Resumen Administrativo
               </h3>
-              <div className="bg-slate-900 text-white p-8 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+              <div className="bg-white border border-slate-100 p-8 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
                 <div className="space-y-2">
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Balance Final Ajustado</p>
-                  <p className="text-4xl font-black text-pink-400 font-mono">${netUtility.toFixed(2)}</p>
-                  <p className="text-[10px] text-slate-500 italic">Deducciones de comisiones e insumos aplicadas.</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em]">Balance Final Ajustado</p>
+                  <p className="text-4xl font-black text-gold-500 font-mono">${netUtility.toFixed(2)}</p>
                 </div>
-                <div className="h-px md:h-12 w-full md:w-px bg-white/10"></div>
+                <div className="h-px md:h-12 w-full md:w-px bg-slate-100"></div>
                 <div className="flex flex-col items-center md:items-end">
-                  <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Efectivo Físico en Caja</p>
-                  <p className="text-2xl font-black font-mono text-white">${(totalSales * 0.4 - totalExpenses).toFixed(2)}</p>
-                  <p className="text-[10px] opacity-40 uppercase">(Ventas Efectivo - Gastos)</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-[0.2em]">Caja Efectivo</p>
+                  <p className="text-2xl font-black font-mono text-slate-900">${(totalSales * 0.4 - totalExpenses).toFixed(2)}</p>
                 </div>
-              </div>
-            </div>
-
-            {/* View: Reception */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 font-mono">
-                <CheckSquare className="w-4 h-4" />
-                Checklist de Recepción
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {['Corte de terminal', 'Limpieza de estaciones', 'Respaldo de citas'].map((task, i) => (
-                  <div key={i} className="p-4 border border-slate-200 rounded-xl flex items-center gap-3">
-                    <div className="w-5 h-5 border-2 border-pink-500 rounded flex items-center justify-center">
-                      <span className="text-pink-500 font-black text-xs">✓</span>
-                    </div>
-                    <span className="text-xs font-bold uppercase tracking-tighter">{task}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* View: Specialists */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Metas Mensuales (Avance Real)
-              </h3>
-              <div className="space-y-6">
-                {specialistGoals.map((goal, i) => (
-                  <div key={i} className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <p className="font-bold text-slate-900 uppercase text-xs">{goal.specialist}</p>
-                      <p className="font-mono text-xs text-pink-600 font-black">{goal.percentage.toFixed(1)}% Alcanzado</p>
-                    </div>
-                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${goal.percentage}%` }}
-                        transition={{ duration: 1, delay: 0.2 }}
-                        className="h-full bg-slate-900"
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-slate-400 font-bold">
-                      <span>ACTUAL: ${goal.totalWithToday.toFixed(0)}</span>
-                      <span>OBJETIVO: ${goal.target.toFixed(0)}</span>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
         </div>
-
-        <footer className="mt-24 pt-8 border-t border-slate-100 flex justify-between items-center text-slate-300 font-mono text-[10px] uppercase">
-          <span>Glam Studio OS Terminal ID: #774-XP</span>
-          <div className="flex items-center gap-4 text-right">
-            <button className="flex items-center gap-1 hover:text-pink-500 transition-colors">
-              <Printer className="w-3 h-3" /> Imprimir Ticket
-            </button>
-            <span className="font-black text-slate-900 italic">Validado Correctamente</span>
-          </div>
-        </footer>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-[1280px] min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col p-8 mx-auto">
-      {/* Header Section */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-slate-200 pb-4 gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 underline decoration-pink-500 decoration-4 underline-offset-4">GLAM STUDIO</h1>
-            <span className="text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded font-black uppercase tracking-widest">{currentRole}</span>
-          </div>
-          <p className="text-sm text-slate-500 mt-1 uppercase tracking-widest font-semibold tracking-tighter">Terminal de Gestión Operativa</p>
-        </div>
-        
-        {/* Actions & Role Selector */}
-        <div className="flex flex-wrap items-center gap-4 self-end scale-90 md:scale-100 origin-right">
-          <button 
-            onClick={() => setShowCierre(true)}
-            className="flex items-center gap-2 px-4 py-1.5 bg-pink-600 text-white rounded-md text-xs font-black shadow-lg shadow-pink-600/20 hover:bg-pink-700 transition-all uppercase tracking-widest"
-          >
-            <Settings className="w-3 h-3" />
-            Cierre de Turno
-          </button>
-          
-          <div className="flex bg-slate-200 p-1 rounded-lg">
-            {(['Especialista', 'Recepcion', 'Administrador'] as UserRole[]).map((role) => (
-              <button
-                key={role}
-                onClick={() => setCurrentRole(role)}
-                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  currentRole === role 
-                  ? 'bg-white text-slate-900 shadow-sm' 
-                  : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                {role === 'Especialista' ? 'Ana' : role === 'Recepcion' ? 'Recepción' : 'Admin'}
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
-
-      {/* Info Bar */}
-      <div className="mb-6 flex flex-wrap items-center gap-6 px-4 py-2 bg-white rounded-xl border border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </div>
-        <div className="flex items-center gap-2">
-          <Info className="w-3 h-3" />
-          TERMINAL: TS-0129-B
-        </div>
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-3 h-3 text-pink-500" />
-          SESSION ENCRYPTED
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-grow">
-        
-        {/* VIEW: SPECIALIST (Ana) */}
-        {currentRole === 'Especialista' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-12 gap-8">
-            <div className="md:col-span-8 space-y-6">
-              <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm overflow-hidden relative">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-pink-500"></div>
-                <div>
-                  <h2 className="text-2xl font-black text-slate-900 mb-1">Tu Actividad de Hoy</h2>
-                  <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">RESUMEN DE DESEMPEÑO PERSONAL - ANA</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Comisión Acumulada</p>
-                  <p className="text-3xl font-black text-pink-600">${anaPerformance?.total.toFixed(2)}</p>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                <div className="bg-slate-900 p-4 flex justify-between items-center text-white">
-                  <h3 className="font-bold flex items-center gap-2 italic uppercase text-[10px] tracking-widest text-[#FDFBF7]">
-                    <Scissors className="w-4 h-4 text-pink-400" />
-                    Servicios Realizados
-                  </h3>
-                  <span className="text-[10px] font-black bg-white/10 px-2 py-1 rounded truncate max-w-[100px]">{anaServices.length} servicios</span>
-                </div>
-                <div className="p-4 overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
-                      <tr>
-                        <th className="py-3 px-2">Servicio</th>
-                        <th className="py-3 px-2">Precio</th>
-                        <th className="py-3 px-2 text-right">Tu Comisión</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-sm">
-                      {anaServices.map((s) => (
-                        <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                          <td className="py-4 px-2 font-black text-slate-800">{s.service}</td>
-                          <td className="py-4 px-2 font-mono font-medium">${s.servicePrice.toFixed(2)}</td>
-                          <td className="py-4 px-2 text-right font-mono text-pink-600 font-black">
-                            +${(s.servicePrice * 0.3).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+    <>
+      <SplashScreen />
+      {showPWAInfo && <PWAGuide onClose={() => setShowPWAInfo(false)} />}
+      {showProposal && <ProposalView onClose={() => setShowProposal(false)} />}
+      
+      <div className="w-full max-w-[1400px] min-h-screen bg-[#F8FAFC] font-sans text-slate-500 flex flex-col p-4 sm:p-6 md:p-10 mx-auto selection:bg-gold-500 selection:text-black">
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-8">
+          <div className="flex items-center gap-6 group">
+            <div className="relative">
+              <img 
+                src="https://cossma.com.mx/glamstudio.png" 
+                alt="Logo" 
+                className="h-14 sm:h-16 object-contain grayscale group-hover:grayscale-0 transition-all duration-700" 
+              />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gold-500 rounded-full flex items-center justify-center border-2 border-[#F8FAFC]">
+                 <ShieldCheck className="w-2.5 h-2.5 text-black" />
               </div>
             </div>
-
-            <div className="md:col-span-4 space-y-6">
-              <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl">
-                <h3 className="text-[10px] uppercase tracking-widest text-slate-400 mb-6 font-bold flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  Métricas Operativas
-                </h3>
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase mb-2 font-bold">Total en Servicios</p>
-                    <div className="flex items-end justify-between">
-                      <span className="text-2xl font-black italic underline decoration-pink-500 underline-offset-4">${anaPerformance?.serviceTotal.toFixed(2)}</span>
-                      <span className="text-[10px] bg-white/10 px-2 py-1 rounded font-bold">30% Share</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase mb-2 font-bold">Comisión por Productos</p>
-                    <div className="flex items-end justify-between">
-                      <span className="text-2xl font-black italic underline decoration-blue-500 underline-offset-4">${(anaPerformance?.productTotal! * 0.1).toFixed(2)}</span>
-                      <span className="text-[10px] bg-white/10 px-2 py-1 rounded font-bold">10% Retail</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center gap-4 text-slate-400 italic text-xs">
-                <CreditCard className="w-8 h-8 opacity-20 text-pink-600" />
-                <p>Las comisiones acumuladas se liquidan automáticamente al procesar el cierre de turno.</p>
-              </div>
+            <div className="h-10 w-px bg-slate-200 hidden sm:block"></div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black tracking-[0.25em] text-slate-900 uppercase flex items-center gap-3 italic">
+                Management
+                <span className="text-[9px] bg-black text-gold-500 px-2 py-0.5 rounded font-black tracking-normal not-italic">{currentRole.toUpperCase()}</span>
+              </h1>
+              <p className="text-[10px] text-gold-600 font-black tracking-[0.4em] mt-1 opacity-60">CORE OPERATING SYSTEM v3.1</p>
             </div>
-          </motion.div>
-        )}
+          </div>
 
-        {/* VIEW: RECEPTION */}
-        {currentRole === 'Recepcion' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-12 gap-8">
-            <div className="md:col-span-7 space-y-6">
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                <div className="bg-slate-800 p-4 text-white flex justify-between items-center font-bold">
-                  <h3 className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#FDFBF7]">
-                    <Wallet className="w-4 h-4 text-pink-400" />
-                    Pagos Pendientes por Cobrar
-                  </h3>
-                </div>
-                <div className="p-4">
-                  {PENDING_PAYMENTS.map((p, i) => (
-                    <div key={i} className="flex justify-between items-center py-4 border-b border-slate-100 last:border-0 group hover:bg-slate-50 px-2 rounded-lg transition-colors">
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4">
+             <div className="w-full sm:w-auto flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+                {(['admin', 'recepcion', 'especialista'] as UserRole[]).map((role) => (
+                  <button
+                    key={role}
+                    onClick={() => setCurrentRole(role)}
+                    className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                      currentRole === role 
+                        ? 'bg-gold-500 text-black shadow-lg shadow-gold-500/20' 
+                        : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    {role}
+                  </button>
+                ))}
+             </div>
+             
+             <div className="w-full sm:w-auto flex gap-3">
+                <button 
+                  onClick={() => setShowCierre(true)}
+                  className="flex-1 sm:flex-none px-6 py-3 bg-slate-900 text-gold-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-black/10"
+                >
+                  Cierre
+                </button>
+                <button 
+                  onClick={() => setShowProposal(true)}
+                  className="p-3 bg-white border border-slate-200 text-slate-400 rounded-xl hover:text-gold-600 transition-all shadow-sm"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+             </div>
+          </div>
+        </header>
+
+        <main className="flex-grow space-y-8 sm:space-y-12">
+              {/* ROLE: ADMIN */}
+          {currentRole === 'admin' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
+              {/* KPIs Principales */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { label: 'Ventas Brutas', val: `$${totalSales.toLocaleString()}`, color: 'text-slate-900', sub: '+12.4% vs Ayer', icon: <TrendingUp className="w-5 h-5" /> },
+                  { label: 'Utilidad Neta', val: `$${netUtility.toLocaleString()}`, color: 'text-gold-600', sub: 'Margen: 42%', icon: <DollarSign className="w-5 h-5" /> },
+                  { label: 'Comisiones', val: `$${totalCommissions.toLocaleString()}`, color: 'text-slate-900', sub: 'Pendiente Pago', icon: <CreditCard className="w-5 h-5" /> },
+                  { label: 'Eficiencia', val: '94%', color: 'text-slate-900', sub: 'Optimización Max', icon: <Activity className="w-5 h-5" /> },
+                ].map((kpi, i) => (
+                  <div key={i} className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{kpi.label}</p>
+                      <div className="text-gold-500">{kpi.icon}</div>
+                    </div>
+                    <p className={`text-3xl font-black ${kpi.color} font-mono tracking-tighter`}>{kpi.val}</p>
+                    <p className="mt-2 text-[10px] text-slate-400 font-bold uppercase italic">{kpi.sub}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Gráfica Financiera */}
+                <div className="lg:col-span-8 space-y-8">
+                  <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
+                    <div className="flex justify-between items-center mb-8">
                       <div>
-                        <p className="font-black text-slate-900 uppercase text-xs mb-0.5">{p.client}</p>
-                        <p className="text-[10px] text-slate-500 uppercase font-medium">{p.service}</p>
+                        <h3 className="text-slate-900 font-black uppercase text-sm tracking-widest">Reporte Financiero Intra-Día</h3>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase italic">Balance Activo vs Gastos</p>
                       </div>
-                      <div className="text-right flex items-center gap-4">
-                        <span className="text-sm font-black text-slate-900 font-mono tracking-tighter">${p.amount.toFixed(2)}</span>
-                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-pink-500 transition-colors" />
+                      <button className="p-2 px-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-900 uppercase tracking-widest hover:bg-gold-500 hover:text-black transition-all">Exportar PDF</button>
+                    </div>
+                    <div className="h-[320px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={REVENUE_DATA}>
+                          <defs>
+                            <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#d4af37" stopOpacity={0.2}/>
+                              <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                          <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} axisLine={false} tickLine={false} dy={10} />
+                          <YAxis stroke="#94a3b8" fontSize={10} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                          <Tooltip 
+                             contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #e2e8f0', borderRadius: '16px', fontSize: '10px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                             itemStyle={{ color: '#b45309', fontWeight: 'bold' }}
+                             labelStyle={{ color: '#64748b', marginBottom: '4px' }}
+                          />
+                          <Area type="monotone" dataKey="total" stroke="#d4af37" strokeWidth={4} fillOpacity={1} fill="url(#colorTotal)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Edición de Registros (Vault) */}
+                  <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
+                    <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center gap-4">
+                       <ShieldCheck className="w-5 h-5 text-gold-600" />
+                       <h3 className="text-slate-900 font-black uppercase text-xs tracking-[0.2em]">Bóveda de Correcciones (Tickets Cerrados)</h3>
+                    </div>
+                    <div className="p-8">
+                       <div className="space-y-4">
+                          {SALES.slice(0, 3).map((sale) => (
+                            <div key={sale.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-200 group transition-all">
+                               <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center font-black text-[10px] text-slate-400">{sale.id}</div>
+                                  <div>
+                                     <p className="text-xs font-black text-slate-900">{sale.service}</p>
+                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{sale.specialist} • {sale.paymentMethod}</p>
+                                  </div>
+                               </div>
+                               <div className="flex items-center gap-4">
+                                  <span className="text-sm font-black text-slate-900 font-mono">${sale.total.toFixed(2)}</span>
+                                  <button className="p-2 px-4 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-gold-600 hover:bg-gold-500 hover:text-black transition-all">EDITAR TICKET</button>
+                                  <button className="p-2 text-rose-400 hover:text-rose-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                               </div>
+                            </div>
+                          ))}
+                       </div>
+                       <p className="mt-6 text-[9px] text-slate-400 font-bold text-center uppercase tracking-widest italic opacity-60">Solo el Administrador puede revertir transacciones en la Bóveda</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sidebar Administrativo */}
+                <div className="lg:col-span-4 space-y-8">
+                  {/* Comisiones y Staff */}
+                  <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
+                    <div className="flex items-center justify-between mb-8">
+                       <div className="flex items-center gap-3">
+                          <Settings2 className="w-5 h-5 text-gold-600" />
+                          <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Configura Comisiones</h4>
+                       </div>
+                    </div>
+                    <div className="space-y-6">
+                      {SPECIALISTS.map((spec, i) => (
+                        <div key={i} className="space-y-2">
+                           <div className="flex justify-between items-center">
+                              <p className="text-xs font-black text-slate-900">{spec.name}</p>
+                              <p className="text-[10px] font-mono text-gold-600 font-black">{(spec.serviceCommission * 100).toFixed(0)}%</p>
+                           </div>
+                           <div className="h-1.5 w-full bg-slate-100 rounded-full relative overflow-hidden group">
+                              <div className="absolute inset-y-0 left-0 bg-gold-500 rounded-full" style={{ width: `${spec.serviceCommission * 100}%` }}></div>
+                              <input 
+                                type="range" 
+                                className="absolute inset-0 opacity-0 cursor-pointer" 
+                                min="0" max="1" step="0.05" 
+                                value={spec.serviceCommission}
+                                readOnly
+                              />
+                           </div>
+                        </div>
+                      ))}
+                      <div className="pt-4 space-y-4">
+                        <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gold-500 hover:text-black transition-all">Guardar Cambios</button>
+                        <button className="w-full py-4 border-2 border-dashed border-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-gold-500 hover:text-gold-600 transition-all flex items-center justify-center gap-3">
+                           <UserPlus className="w-4 h-4" /> Alta Nuevo Staff
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                  </div>
 
-            <div className="md:col-span-5 space-y-6">
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                <div className="bg-slate-900 p-4 text-white flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest text-[#FDFBF7]">
-                   <Package className="w-4 h-4 text-blue-400" />
-                   Inventario: Reposición de Hoy
-                </div>
-                <div className="p-4">
-                  <div className="space-y-4">
-                    {INVENTORY.filter(item => item.soldToday > 0).map((item, i) => (
-                      <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <div>
-                          <p className="text-xs font-black text-slate-800 uppercase">{item.name}</p>
-                          <p className="text-[10px] text-pink-500 font-bold uppercase tracking-tighter italic">Vendido: {item.soldToday} u.</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[10px] uppercase text-slate-400 font-bold mb-0.5">Stock</p>
-                          <p className={`text-xs font-black ${item.currentStock < 5 ? 'text-red-500' : 'text-slate-900'}`}>{item.currentStock} u.</p>
-                        </div>
-                      </div>
-                    ))}
+                  {/* Logs de Seguridad */}
+                  <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden shadow-2xl">
+                     <div className="absolute top-0 right-0 p-4 opacity-10"><Shield className="w-20 h-20" /></div>
+                     <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-6 opacity-40">Security Logs</h4>
+                     <div className="space-y-4 relative z-10">
+                        {['Acceso Admin: 22:59', 'Backup Cloud OK', 'Ticket #S3 Modificado'].map((log, i) => (
+                          <div key={i} className="flex items-center gap-3 text-[9px] font-mono opacity-60">
+                             <div className="w-1 h-1 bg-gold-500 rounded-full"></div> {log}
+                          </div>
+                        ))}
+                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* VIEW: ADMIN (Dueño) */}
-        {currentRole === 'Administrador' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-2 font-mono">Ingresos Brutos</p>
-                <p className="text-3xl font-black text-slate-900">${totalSales.toFixed(2)}</p>
-                <div className="mt-4 flex items-center gap-1 text-[10px] font-bold text-green-500 bg-green-50 px-2 py-1 rounded w-fit uppercase tracking-tighter">
-                   <TrendingUp className="w-3 h-3" />
-                   TURNO ACTUAL
-                </div>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-2 font-mono">Comisiones a Pagar</p>
-                <p className="text-3xl font-black text-pink-600">${totalCommissions.toFixed(2)}</p>
-                <p className="mt-4 text-[10px] text-slate-400 font-black uppercase italic tracking-widest truncate">Salidas Proyectadas</p>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-2 font-mono">Gastos Hoy</p>
-                <p className="text-3xl font-black text-slate-900 underline decoration-slate-200">${totalExpenses.toFixed(2)}</p>
-                <p className="mt-4 text-[10px] text-slate-300 font-bold uppercase truncate tracking-widest">{EXPENSES.length} Movimientos</p>
-              </div>
-              <div className="bg-slate-900 p-6 rounded-2xl shadow-xl ring-4 ring-pink-500/10 text-white">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-2 font-mono text-[#FDFBF7]">Utilidad Neta Real</p>
-                <p className="text-3xl font-black text-pink-400">${netUtility.toFixed(2)}</p>
-                <p className="mt-4 text-[10px] text-white/40 font-black uppercase italic tracking-widest truncate">Balance Final Turno</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-              <div className="md:col-span-8 bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                <div className="bg-slate-800 p-4 text-white font-black text-[10px] tracking-widest flex items-center gap-2 italic uppercase text-[#FDFBF7]">
-                   <ShieldCheck className="w-4 h-4 text-pink-400" />
-                   RESUMEN EJECUTIVO DE OPERACIONES
-                </div>
-                <div className="p-8">
-                   <div className="space-y-6">
-                      <div className="flex justify-between pb-4 border-b border-slate-100">
-                         <span className="font-black text-xs uppercase tracking-widest text-slate-400">Total Venta de Servicios</span>
-                         <span className="font-mono text-slate-600 font-bold">${totalServiceSales.toFixed(2)}</span>
+          {/* ROLE: RECEPCION */}
+          {currentRole === 'recepcion' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8 space-y-6">
+                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+                   <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <Calendar className="w-5 h-5 text-gold-600" />
+                        <h3 className="text-slate-900 font-black uppercase text-sm tracking-widest">Agenda Global HOY</h3>
                       </div>
-                      <div className="flex justify-between pb-4 border-b border-slate-100">
-                         <span className="font-black text-xs uppercase tracking-widest text-slate-400">Total Venta de Productos</span>
-                         <span className="font-mono text-slate-600 font-bold">${totalProductSales.toFixed(2)}</span>
+                      <span className="text-[10px] font-black text-gold-600 bg-gold-500/10 px-3 py-1 rounded-full">{APPOINTMENTS.length} CITAS</span>
+                   </div>
+                   <div className="p-6">
+                      <div className="space-y-4">
+                        {APPOINTMENTS.map((app) => (
+                          <div key={app.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-gold-500/30 transition-all group shadow-xs">
+                             <div className="flex items-center gap-4 mb-3 sm:mb-0">
+                                <div className="p-3 bg-white border border-slate-200 rounded-xl group-hover:bg-gold-500/10 group-hover:border-gold-500/30 transition-colors">
+                                   <p className="text-xs font-black text-gold-600 font-mono">{app.time}</p>
+                                </div>
+                                <div>
+                                   <p className="text-sm font-black text-slate-900">{app.name}</p>
+                                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{app.service} — {app.specialist}</p>
+                                </div>
+                             </div>
+                             <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
+                                  app.status === 'Completada' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-gold-500/10 text-gold-600'
+                                }`}>
+                                  {app.status}
+                                </span>
+                                <button className="p-2 bg-white rounded-lg border border-slate-200 hover:border-gold-500 transition-all shadow-xs">
+                                   <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-gold-600" />
+                                </button>
+                             </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex justify-between pb-4 border-b border-slate-100 italic font-medium">
-                         <span className="font-black text-xs tracking-widest text-pink-600 uppercase">Retención por Comisiones</span>
-                         <span className="font-mono text-pink-600 font-bold">-${totalCommissions.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between pt-4">
-                         <span className="text-2xl font-black italic tracking-tighter">UTILIDAD OPERATIVA</span>
-                         <span className="text-2xl font-black underline decoration-4 decoration-pink-500 underline-offset-4 font-mono tracking-tighter">
-                           ${(totalSales - totalCommissions).toFixed(2)}
-                         </span>
-                      </div>
+                      <button className="w-full mt-6 py-4 bg-gold-500 text-black rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] transition-all shadow-lg shadow-gold-500/20">
+                        <PlusCircle className="w-4 h-4" /> Agendar Nueva Cita
+                      </button>
                    </div>
                 </div>
               </div>
-              <div className="md:col-span-4 bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-center items-center text-center">
-                 <p className="text-[10px] uppercase font-bold text-slate-400 mb-6 px-4 tracking-widest">Este reporte es un resumen del rendimiento operativo del turno en curso.</p>
-                 <div className="p-5 bg-slate-900 rounded-full shadow-lg mb-6 border-4 border-pink-500/20">
-                    <BarChart3 className="w-8 h-8 text-pink-500" />
-                 </div>
-                 <p className="text-xs text-slate-400 font-black italic uppercase tracking-tighter">"Excelencia en cada detalle"</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
 
+              <div className="lg:col-span-4 space-y-8">
+                <div className="bg-white border border-slate-100 rounded-3xl p-8 space-y-6 shadow-sm">
+                   <div className="flex items-center gap-3">
+                      <CreditCard className="w-5 h-5 text-gold-600" />
+                      <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Cobro POS Express</h4>
+                   </div>
+                   <div className="p-10 bg-slate-50 border border-slate-200 border-dashed rounded-3xl flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-gold-500/5 hover:border-gold-500/30 transition-all">
+                      <div className="w-16 h-16 bg-white border border-slate-200 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-gold-500/30 transition-transform shadow-xs">
+                         <PlusCircle className="w-8 h-8 text-gold-500" />
+                      </div>
+                      <p className="text-slate-900 font-black uppercase text-xs">Cargar Servicio</p>
+                      <p className="text-[10px] text-slate-400 font-bold italic mt-1">Escanea o selecciona cliente</p>
+                   </div>
+                   <button className="w-full py-4 bg-slate-50 text-gold-600 rounded-2xl border border-slate-200 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-gold-500 hover:text-black hover:border-gold-500 transition-all shadow-xs">
+                     Historial de Transacciones
+                   </button>
+                </div>
+
+                <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm">
+                   <div className="flex justify-between items-center mb-6">
+                      <div className="flex items-center gap-3">
+                         <Package className="w-5 h-5 text-gold-600" />
+                         <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Gastos Caja</h4>
+                      </div>
+                      <PlusCircle className="w-4 h-4 text-gold-500 cursor-pointer" />
+                   </div>
+                   <div className="space-y-4">
+                      {EXPENSES.slice(0, 3).map((exp, i) => (
+                        <div key={i} className="flex justify-between items-center py-2 border-b border-slate-100">
+                           <span className="text-[10px] font-bold text-slate-400 uppercase">{exp.description}</span>
+                           <span className="text-xs font-black text-rose-500">-${exp.amount.toFixed(2)}</span>
+                        </div>
+                      ))}
+                      <p className="text-[9px] text-slate-300 font-black uppercase tracking-widest text-center italic mt-4">Todos los gastos deben ser autorizados</p>
+                   </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ROLE: ESPECIALISTA */}
+          {currentRole === 'especialista' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8 space-y-8">
+                <div className="bg-white border border-slate-100 rounded-3xl p-8 relative overflow-hidden shadow-sm">
+                   <div className="absolute -right-4 -top-4 w-32 h-32 bg-gold-500/5 rounded-full blur-3xl opacity-30"></div>
+                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                      <div>
+                         <h2 className="text-3xl font-black text-slate-900 italic tracking-tighter">Bienvenida, Ana</h2>
+                         <p className="text-[10px] text-gold-600 font-black uppercase tracking-[0.3em] mt-1">Estatus: Premium Specialist</p>
+                      </div>
+                      <div className="text-right">
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tu Comisión Hoy</p>
+                         <p className="text-5xl font-black text-gold-500 font-mono tracking-tighter">${anaPerformance?.total.toLocaleString()}</p>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+                   <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center gap-4">
+                      <Scissors className="w-5 h-5 text-gold-600" />
+                      <h3 className="text-slate-900 font-black uppercase text-sm tracking-widest">Tus Servicios de Hoy</h3>
+                   </div>
+                   <div className="p-0">
+                      <table className="w-full text-left">
+                        <thead className="text-[10px] text-slate-400 font-black uppercase border-b border-slate-100 bg-slate-50/50">
+                           <tr>
+                              <th className="px-8 py-4">Servicio Realizado</th>
+                              <th className="px-8 py-4">Total</th>
+                              <th className="px-8 py-4 text-right">Comisión</th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                          {anaServices.map((s, i) => (
+                            <tr key={i} className="border-b border-slate-100 hover:bg-gold-50/50 transition-colors">
+                               <td className="px-8 py-6">
+                                  <p className="text-sm font-black text-slate-900">{s.service} <span className="text-[9px] text-slate-400 font-normal italic lowercase tracking-normal bg-slate-100 border border-slate-200 px-2 py-0.5 rounded ml-2">completado</span></p>
+                                  <p className="text-[10px] text-gold-600 uppercase font-black tracking-widest mt-0.5">Ticket #{s.id}</p>
+                               </td>
+                               <td className="px-8 py-6 font-mono text-xs text-slate-500">${s.servicePrice.toFixed(2)}</td>
+                               <td className="px-8 py-6 text-right font-black text-gold-600 font-mono text-sm">
+                                  +${(s.servicePrice * 0.3).toFixed(2)}
+                                </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                   </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 space-y-8">
+                 <div className="bg-white border border-slate-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm">
+                    <div className="w-32 h-32 rounded-full border-4 border-slate-50 relative flex items-center justify-center mb-6 shadow-xs">
+                       <svg className="absolute -rotate-90 w-full h-full">
+                          <circle cx="64" cy="64" r="60" stroke="#f8fafc" strokeWidth="6" fill="transparent" />
+                          <circle cx="64" cy="64" r="60" stroke="#d4af37" strokeWidth="6" strokeDasharray="376" strokeDashoffset={376 * (1 - 0.72)} fill="transparent" strokeLinecap="round" />
+                       </svg>
+                       <span className="text-2xl font-black text-slate-900 italic">72%</span>
+                    </div>
+                    <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest mb-2">Meta Personal</h4>
+                    <p className="text-xs text-slate-400 font-medium px-8 italic">Buen trabajo Ana, estás muy cerca del bono nivel platino.</p>
+                    <button className="mt-8 w-full py-4 bg-slate-100 border border-slate-200 text-gold-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gold-500 hover:text-black transition-all shadow-xs">
+                       Ver Mis Bonos
+                    </button>
+                 </div>
+
+                 <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm">
+                    <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest mb-6">Siguiente Cliente</h4>
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                       <p className="text-xs font-black text-gold-600 font-mono mb-1">11:30 AM</p>
+                       <p className="text-sm font-black text-slate-900 uppercase italic">Claudia R.</p>
+                       <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Uñas Acrílico + Gelish</p>
+                    </div>
+                    <button className="w-full mt-6 py-3 bg-slate-100 border border-slate-200 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-xl hover:text-slate-900 transition-all shadow-xs">
+                       Gestionar Mi Agenda
+                    </button>
+                 </div>
+              </div>
+            </motion.div>
+          )}
+
+        </main>
+
+        <footer className="mt-16 pt-10 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-6 text-[10px] font-black tracking-[0.4em] uppercase text-slate-300">
+             <span>v3.0.1 Stable Cloud</span>
+             <span className="hidden md:block">|</span>
+             <span>Region: MX-CDMX-01</span>
+          </div>
+          <div className="flex items-center gap-3">
+             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b98150]"></div>
+             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Encritptación AES-256 Activa</p>
+          </div>
+          <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.2em]">© 2026 GLAM STUDIO MGMT</p>
+        </footer>
       </div>
-      
-      <footer className="mt-8 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 font-bold uppercase tracking-[0.3em] font-mono text-[8px] md:text-[10px]">
-        <span>Glam OS v2.5 Stable Production</span>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-          <span>Sincronización Cloud OK</span>
-        </div>
-        <span>© 2026 GLAM STUDIO MGMT</span>
-      </footer>
-    </div>
+    </>
   );
 };

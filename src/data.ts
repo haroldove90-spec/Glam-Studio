@@ -15,8 +15,10 @@ export const EXPENSES: Expense[] = [
 ];
 
 export const MONTHLY_GOALS: MonthlyGoal[] = [
-  { specialist: 'Ana', target: 5000, current: 3200 }, // Simulated monthly progress
+  { specialist: 'Ana', target: 5000, current: 3200 },
   { specialist: 'Roberto', target: 4500, current: 2800 },
+  { specialist: 'Carla', target: 4000, current: 1500 },
+  { specialist: 'Sofía', target: 4000, current: 2100 },
 ];
 
 export const SALES: Sale[] = [
@@ -50,6 +52,26 @@ export const SALES: Sale[] = [
     paymentMethod: 'Transferencia',
     specialist: 'Ana'
   },
+  { 
+    id: 'S4', 
+    service: 'Pedicura', 
+    extraProducts: [], 
+    servicePrice: 40,
+    productPrice: 0,
+    total: 40.00, 
+    paymentMethod: 'Tarjeta',
+    specialist: 'Carla' 
+  },
+  { 
+    id: 'S5', 
+    service: 'Tratamiento Facial', 
+    extraProducts: [], 
+    servicePrice: 90,
+    productPrice: 0,
+    total: 90.00, 
+    paymentMethod: 'Efectivo',
+    specialist: 'Sofía' 
+  },
 ];
 
 export const PENDING_PAYMENTS: PendingPayment[] = [
@@ -67,4 +89,6 @@ export const INVENTORY: InventoryItem[] = [
 export const SPECIALISTS: Specialist[] = [
   { name: 'Ana', serviceCommission: 0.30, productCommission: 0.10 },
   { name: 'Roberto', serviceCommission: 0.30, productCommission: 0.10 },
+  { name: 'Carla', serviceCommission: 0.35, productCommission: 0.10 },
+  { name: 'Sofía', serviceCommission: 0.30, productCommission: 0.12 },
 ];

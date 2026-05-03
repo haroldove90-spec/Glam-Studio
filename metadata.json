@@ -1,6 +1,6 @@
 {
-  "name": "Glam Studio Manager",
-  "description": "Sistema de gestión integral para Glam Studio, con control de citas, ventas y comisiones.",
+  "name": "Glam Studio",
+  "description": "Sistema de gestión premium para Glam Studio. Gestión de citas, ventas, inventario y cierre de turno.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }
