@@ -30,13 +30,25 @@ export const Dashboard: React.FC = () => {
   const [showPWAInfo, setShowPWAInfo] = useState(false);
   const [showProposal, setShowProposal] = useState(false);
 
+  // New states for simulations
+  const [specialists, setSpecialists] = useState(SPECIALISTS);
+  const [inventory, setInventory] = useState(INVENTORY);
+  const [sales, setSales] = useState(SALES);
+  const [showStaffModal, setShowStaffModal] = useState(false);
+  const [showStockModal, setShowStockModal] = useState(false);
+  const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
+
   // Calculations
-  const totalSales = SALES.reduce((acc, sale) => acc + sale.total, 0);
-  const totalServiceSales = SALES.reduce((acc, sale) => acc + sale.servicePrice, 0);
-  const totalProductSales = SALES.reduce((acc, sale) => acc + sale.productPrice, 0);
+  const totalSales = sales.reduce((acc, sale) => acc + sale.total, 0);
+  const totalCommissions = specialists.reduce((acc, spec) => {
+    const specSales = sales.filter(s => s.specialist === spec.name);
+    const serviceTotal = specSales.reduce((acc, s) => acc + s.servicePrice, 0);
+    const productTotal = specSales.reduce((acc, s) => acc + s.productPrice, 0);
+    return acc + (serviceTotal * spec.serviceCommission) + (productTotal * spec.productCommission);
+  }, 0);
   
-  const commissionSummary = SPECIALISTS.map(spec => {
-    const specSales = SALES.filter(s => s.specialist === spec.name);
+  const commissionSummary = specialists.map(spec => {
+    const specSales = sales.filter(s => s.specialist === spec.name);
     const serviceTotal = specSales.reduce((acc, s) => acc + s.servicePrice, 0);
     const productTotal = specSales.reduce((acc, s) => acc + s.productPrice, 0);
     const serviceCommission = serviceTotal * spec.serviceCommission;
@@ -50,7 +62,6 @@ export const Dashboard: React.FC = () => {
     };
   });
 
-  const totalCommissions = commissionSummary.reduce((acc, curr) => acc + curr.total, 0);
   const totalExpenses = EXPENSES.reduce((acc, e) => acc + e.amount, 0);
   const netUtility = totalSales - totalCommissions - totalExpenses;
 
@@ -63,9 +74,35 @@ export const Dashboard: React.FC = () => {
     return { ...goal, todaySales, totalWithToday, percentage };
   });
 
+  // Actions
+  const handleCommissionChange = (name: string, value: number) => {
+    setSpecialists(prev => prev.map(s => s.name === name ? { ...s, serviceCommission: value, productCommission: value > 0.1 ? value - 0.1 : 0 } : s));
+  };
+
+  const deleteTicket = (id: string) => {
+    setSales(prev => prev.filter(s => s.id !== id));
+    setTicketToDelete(null);
+  };
+
+  const addStock = (name: string, amount: number) => {
+    setInventory(prev => prev.map(item => item.name === name ? { ...item, currentStock: item.currentStock + amount } : item));
+    setShowStockModal(false);
+  };
+
+  const addStaff = (name: string) => {
+    const newStaff = {
+      name,
+      serviceCommission: 0.3,
+      productCommission: 0.1,
+      target: 50000
+    };
+    setSpecialists(prev => [...prev, newStaff]);
+    setShowStaffModal(false);
+  };
+
   // Specialist View Data (Ana)
   const anaPerformance = commissionSummary.find(c => c.name === 'Ana');
-  const anaServices = SALES.filter(s => s.specialist === 'Ana');
+  const anaServices = sales.filter(s => s.specialist === 'Ana');
 
   if (showCierre) {
     return (
@@ -269,7 +306,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                     <div className="p-8">
                        <div className="space-y-4">
-                          {SALES.slice(0, 3).map((sale) => (
+                          {sales.slice(0, 3).map((sale) => (
                             <div key={sale.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-200 group transition-all">
                                <div className="flex items-center gap-4">
                                   <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center font-black text-[10px] text-slate-400">{sale.id}</div>
@@ -281,7 +318,12 @@ export const Dashboard: React.FC = () => {
                                <div className="flex items-center gap-4">
                                   <span className="text-sm font-black text-slate-900 font-mono">${sale.total.toFixed(2)}</span>
                                   <button className="p-2 px-4 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-gold-600 hover:bg-gold-500 hover:text-black transition-all">EDITAR TICKET</button>
-                                  <button className="p-2 text-rose-400 hover:text-rose-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                  <button 
+                                     onClick={() => setTicketToDelete(sale.id)}
+                                     className="p-2 text-rose-400 hover:text-rose-600 transition-colors"
+                                   >
+                                     <Trash2 className="w-4 h-4" />
+                                   </button>
                                </div>
                             </div>
                           ))}
@@ -302,7 +344,7 @@ export const Dashboard: React.FC = () => {
                        </div>
                     </div>
                     <div className="space-y-6">
-                      {SPECIALISTS.map((spec, i) => (
+                      {specialists.map((spec, i) => (
                         <div key={i} className="space-y-2">
                            <div className="flex justify-between items-center">
                               <p className="text-xs font-black text-slate-900">{spec.name}</p>
@@ -312,17 +354,20 @@ export const Dashboard: React.FC = () => {
                               <div className="absolute inset-y-0 left-0 bg-gold-500 rounded-full" style={{ width: `${spec.serviceCommission * 100}%` }}></div>
                               <input 
                                 type="range" 
-                                className="absolute inset-0 opacity-0 cursor-pointer" 
+                                className="absolute inset-0 opacity-100 cursor-pointer accent-gold-500" 
                                 min="0" max="1" step="0.05" 
                                 value={spec.serviceCommission}
-                                readOnly
+                                onChange={(e) => handleCommissionChange(spec.name, parseFloat(e.target.value))}
                               />
                            </div>
                         </div>
                       ))}
                       <div className="pt-4 space-y-4">
                         <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gold-500 hover:text-black transition-all">Guardar Cambios</button>
-                        <button className="w-full py-4 border-2 border-dashed border-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-gold-500 hover:text-gold-600 transition-all flex items-center justify-center gap-3">
+                        <button 
+                           onClick={() => setShowStaffModal(true)}
+                           className="w-full py-4 border-2 border-dashed border-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-gold-500 hover:text-gold-600 transition-all flex items-center justify-center gap-3"
+                         >
                            <UserPlus className="w-4 h-4" /> Alta Nuevo Staff
                         </button>
                       </div>
@@ -331,22 +376,30 @@ export const Dashboard: React.FC = () => {
 
                   {/* Logs de Seguridad y Sync Operativo */}
                   <div className="space-y-6">
-                    <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
-                       <div className="flex items-center gap-3 mb-6">
-                          <Package className="w-5 h-5 text-gold-600" />
-                          <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Stock Sync</h4>
-                       </div>
-                       <div className="space-y-4">
-                          {INVENTORY.slice(0, 2).map((item, i) => (
-                            <div key={i} className="flex justify-between items-center text-[10px] uppercase font-bold">
-                               <span className="text-slate-400">{item.name}</span>
-                               <span className={item.currentStock < 5 ? 'text-rose-500 font-black' : 'text-slate-900'}>
-                                 {item.currentStock} UNIDADES
-                               </span>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
+                     <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
+                        <div className="flex items-center justify-between mb-6">
+                           <div className="flex items-center gap-3">
+                              <Package className="w-5 h-5 text-gold-600" />
+                              <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Stock Sync</h4>
+                           </div>
+                           <button 
+                             onClick={() => setShowStockModal(true)}
+                             className="p-1 px-3 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-black text-gold-600 hover:bg-gold-500 hover:text-white transition-all uppercase"
+                           >
+                              + Alta Stock
+                           </button>
+                        </div>
+                        <div className="space-y-4">
+                           {inventory.slice(0, 3).map((item, i) => (
+                             <div key={i} className="flex justify-between items-center text-[10px] uppercase font-bold">
+                                <span className="text-slate-400">{item.name}</span>
+                                <span className={item.currentStock < 5 ? 'text-rose-500 font-black' : 'text-slate-900'}>
+                                  {item.currentStock} UNIDADES
+                                </span>
+                             </div>
+                           ))}
+                        </div>
+                     </div>
 
                     <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden shadow-2xl">
                        <div className="absolute top-0 right-0 p-4 opacity-10"><Shield className="w-20 h-20" /></div>
@@ -462,22 +515,22 @@ export const Dashboard: React.FC = () => {
                          <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Inventario</h4>
                        </div>
                     </div>
-                    <div className="space-y-4">
-                       <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                          <div>
-                             <p className="text-[10px] font-black text-slate-900 uppercase">Shampoo Premium 500ml</p>
-                             <p className="text-[9px] text-slate-400 font-bold uppercase">Stock Actual: 12 unidades</p>
-                          </div>
-                          <button className="p-2 px-3 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-gold-600">+ ENTRADA</button>
-                       </div>
-                       <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                          <div>
-                             <p className="text-[10px] font-black text-slate-900 uppercase">Tinte Gold Series</p>
-                             <p className="text-[9px] text-slate-400 font-bold uppercase">Stock Actual: 4 unidades</p>
-                          </div>
-                          <button className="p-2 px-3 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-gold-600">+ ENTRADA</button>
-                       </div>
-                    </div>
+                     <div className="space-y-4">
+                        {inventory.slice(0, 2).map((item, i) => (
+                           <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 uppercase">
+                              <div>
+                                 <p className="text-[10px] font-black text-slate-900 uppercase">{item.name}</p>
+                                 <p className="text-[9px] text-slate-400 font-bold uppercase">Stock Actual: {item.currentStock} unidades</p>
+                              </div>
+                              <button 
+                                onClick={() => setShowStockModal(true)}
+                                className="p-2 px-3 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-gold-600 hover:bg-gold-500 hover:text-white transition-all uppercase"
+                              >
+                                + ENTRADA
+                              </button>
+                           </div>
+                        ))}
+                     </div>
                   </div>
                 </div>
               </div>
@@ -764,6 +817,115 @@ export const Dashboard: React.FC = () => {
           <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.2em]">© 2026 GLAM STUDIO MGMT</p>
         </footer>
       </div>
+
+      {/* MODAL: ALTA STAFF */}
+      {showStaffModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+          >
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Alta Nuevo Staff</h3>
+            <div className="space-y-4">
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Nombre Completo</label>
+                  <input id="staff-name" type="text" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-gold-500 outline-none transition-all" placeholder="Ej. Carlos Ruiz" />
+               </div>
+               <button 
+                 onClick={() => {
+                   const input = document.getElementById('staff-name') as HTMLInputElement;
+                   if (input.value) addStaff(input.value);
+                 }}
+                 className="w-full py-4 bg-slate-900 text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-black/10"
+               >
+                 Confirmar Alta
+               </button>
+               <button 
+                 onClick={() => setShowStaffModal(false)}
+                 className="w-full py-2 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600"
+               >
+                 Cancelar
+               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: ALTA STOCK */}
+      {showStockModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+          >
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Ingreso de Mercancía</h3>
+            <div className="space-y-4">
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Producto</label>
+                  <select id="stock-item" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-gold-500 outline-none transition-all">
+                    {inventory.map(item => <option key={item.name} value={item.name}>{item.name}</option>)}
+                  </select>
+               </div>
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Cantidad (Unidades)</label>
+                  <input id="stock-amount" type="number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-gold-500 outline-none transition-all" defaultValue="10" />
+               </div>
+               <button 
+                 onClick={() => {
+                   const itemSelect = document.getElementById('stock-item') as HTMLSelectElement;
+                   const amountInput = document.getElementById('stock-amount') as HTMLInputElement;
+                   addStock(itemSelect.value, parseInt(amountInput.value));
+                 }}
+                 className="w-full py-4 bg-slate-900 text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-black/10"
+               >
+                 Registrar Entrada
+               </button>
+               <button 
+                 onClick={() => setShowStockModal(false)}
+                 className="w-full py-2 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600"
+               >
+                 Cancelar
+               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: CONFIRMAR ELIMINACIÓN */}
+      {ticketToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-6">
+                <Trash2 className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-2 italic">Confirmar Eliminación</h3>
+              <p className="text-xs text-slate-400 font-medium mb-8">¿Estás seguro de eliminar el ticket <span className="font-black text-slate-900">#{ticketToDelete}</span>? Esta acción es irreversible y afectará los reportes financieros.</p>
+              
+              <div className="w-full space-y-3">
+                 <button 
+                   onClick={() => deleteTicket(ticketToDelete)}
+                   className="w-full py-4 bg-rose-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/20"
+                 >
+                   Eliminar permanentemente
+                 </button>
+                 <button 
+                   onClick={() => setTicketToDelete(null)}
+                   className="w-full py-3 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600"
+                 >
+                   Mantener Registro
+                 </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </>
   );
 };
