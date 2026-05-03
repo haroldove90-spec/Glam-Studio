@@ -23,7 +23,7 @@ export const SplashScreen: React.FC = () => {
         <img 
           src="https://cossma.com.mx/glamstudio.png" 
           alt="Glam Studio Logo" 
-          className="h-32 object-contain grayscale"
+          className="h-20 sm:h-32 object-contain grayscale"
         />
         <div className="mt-12 flex flex-col items-center gap-4">
           <div className="h-0.5 w-48 bg-slate-100 rounded-full overflow-hidden">
@@ -34,7 +34,7 @@ export const SplashScreen: React.FC = () => {
               className="h-full bg-gold-500 shadow-[0_0_15px_#d4af3730]"
             />
           </div>
-          <p className="text-gold-600 text-[10px] font-black uppercase tracking-[0.8em] opacity-40 ml-2">Initializing OS</p>
+          <p className="text-gold-600 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] sm:tracking-[0.8em] opacity-40 ml-2">Initializing OS</p>
         </div>
       </motion.div>
       

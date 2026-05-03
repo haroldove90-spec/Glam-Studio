@@ -184,14 +184,16 @@ export const Dashboard: React.FC = () => {
 
   if (showCierre) {
     return (
-      <div className="w-full max-w-[900px] min-h-screen bg-white font-sans text-slate-900 flex flex-col p-8 md:p-16 mx-auto shadow-2xl my-12 rounded-3xl border border-slate-100">
-        <header className="flex flex-col items-center text-center mb-12">
+      <div className="w-full max-w-[900px] min-h-screen bg-white font-sans text-slate-900 flex flex-col p-6 sm:p-8 md:p-16 mx-auto shadow-2xl sm:my-12 rounded-3xl border border-slate-100">
+        <header className="flex flex-col items-center text-center mb-12 px-4">
           <img 
             src="https://cossma.com.mx/glamstudio.png" 
             alt="Glam Studio Logo" 
-            className="h-24 object-contain mb-6 grayscale" 
+            className="h-16 sm:h-24 object-contain mb-6 grayscale" 
           />
-          <h1 className="text-2xl font-black tracking-[0.3em] uppercase border-y-2 border-gold-500 py-3 px-8 text-slate-900">Reporte de Cierre de Turno</h1>
+          <h1 className="text-lg sm:text-2xl font-black tracking-[0.1em] sm:tracking-[0.3em] uppercase border-y-2 border-gold-500 py-3 px-4 sm:px-8 text-slate-900 leading-tight">
+            Reporte de Cierre de Turno
+          </h1>
           <p className="mt-4 font-mono text-[10px] uppercase text-slate-400">Fecha de Emisión: {new Date().toLocaleDateString('es-MX')} | 10:00 PM</p>
         </header>
 
@@ -238,7 +240,7 @@ export const Dashboard: React.FC = () => {
                 <ShieldCheck className="w-4 h-4" />
                 Resumen Administrativo
               </h3>
-              <div className="bg-white border border-slate-100 p-8 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+              <div className="bg-white border border-slate-100 p-8 rounded-2xl shadow-lg flex flex-col sm:flex-row justify-between items-center gap-8 text-center sm:text-left">
                 <div className="space-y-2">
                   <p className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em]">Balance Final Ajustado</p>
                   <p className="text-4xl font-black text-gold-500 font-mono">${netUtility.toFixed(2)}</p>
@@ -263,13 +265,13 @@ export const Dashboard: React.FC = () => {
       {showProposal && <ProposalView onClose={() => setShowProposal(false)} />}
       
       <div className="w-full max-w-[1400px] min-h-screen bg-[#F8FAFC] font-sans text-slate-500 flex flex-col p-4 sm:p-6 md:p-10 mx-auto selection:bg-gold-500 selection:text-black">
-        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-8">
-          <div className="flex items-center gap-6 group">
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 sm:mb-12 gap-6 sm:gap-8">
+          <div className="flex items-center gap-4 sm:gap-6 group">
             <div className="relative">
               <img 
                 src="https://cossma.com.mx/glamstudio.png" 
                 alt="Logo" 
-                className="h-14 sm:h-16 object-contain grayscale group-hover:grayscale-0 transition-all duration-700" 
+                className="h-10 sm:h-16 object-contain grayscale group-hover:grayscale-0 transition-all duration-700" 
               />
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gold-500 rounded-full flex items-center justify-center border-2 border-[#F8FAFC]">
                  <ShieldCheck className="w-2.5 h-2.5 text-black" />
@@ -286,12 +288,12 @@ export const Dashboard: React.FC = () => {
           </div>
 
           <div className="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4">
-             <div className="w-full sm:w-auto flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+             <div className="w-full sm:w-auto grid grid-cols-2 sm:flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm gap-1">
                 {(['admin', 'recepcion', 'especialista', 'cliente'] as UserRole[]).map((role) => (
                   <button
                     key={role}
                     onClick={() => setCurrentRole(role)}
-                    className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                    className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                       currentRole === role 
                         ? 'bg-gold-500 text-black shadow-lg shadow-gold-500/20' 
                         : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
@@ -390,28 +392,30 @@ export const Dashboard: React.FC = () => {
                     <div className="p-8">
                        <div className="space-y-4">
                           {sales.slice(0, 3).map((sale) => (
-                            <div key={sale.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-200 group transition-all">
+                            <div key={sale.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-slate-50 rounded-2xl border border-slate-200 group transition-all gap-4">
                                <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center font-black text-[10px] text-slate-400">{sale.id}</div>
+                                  <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center font-black text-[10px] text-slate-400 shrink-0">{sale.id}</div>
                                   <div>
-                                     <p className="text-xs font-black text-slate-900">{sale.service}</p>
+                                     <p className="text-xs font-black text-slate-900 line-clamp-1">{sale.service}</p>
                                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{sale.specialist} • {sale.paymentMethod}</p>
                                   </div>
                                </div>
-                               <div className="flex items-center gap-4">
+                               <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
                                   <span className="text-sm font-black text-slate-900 font-mono">${sale.total.toFixed(2)}</span>
-                                  <button 
-                                    onClick={() => setTicketToEdit(sale)}
-                                    className="p-2 px-4 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-gold-600 hover:bg-gold-500 hover:text-black transition-all"
-                                  >
-                                    EDITAR TICKET
-                                  </button>
-                                  <button 
-                                     onClick={() => setTicketToDelete(sale.id)}
-                                     className="p-2 text-rose-400 hover:text-rose-600 transition-colors"
-                                   >
-                                     <Trash2 className="w-4 h-4" />
-                                   </button>
+                                  <div className="flex items-center gap-2">
+                                    <button 
+                                      onClick={() => setTicketToEdit(sale)}
+                                      className="p-2 px-3 sm:px-4 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-gold-600 hover:bg-gold-500 hover:text-black transition-all"
+                                    >
+                                      EDITAR
+                                    </button>
+                                    <button 
+                                       onClick={() => setTicketToDelete(sale.id)}
+                                       className="p-2 text-rose-400 hover:text-rose-600 transition-colors"
+                                     >
+                                       <Trash2 className="w-4 h-4" />
+                                     </button>
+                                  </div>
                                </div>
                             </div>
                           ))}
@@ -567,12 +571,12 @@ export const Dashboard: React.FC = () => {
                    <div className="p-6 overflow-y-auto max-h-[500px]">
                       <div className="space-y-3">
                         {appointments.map((app) => (
-                          <div key={app.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-gold-500/30 transition-all hover:shadow-md group">
+                          <div key={app.id} className="flex flex-col sm:items-center sm:flex-row justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-gold-500/30 transition-all hover:shadow-md group gap-4">
                              <div className="flex items-center gap-4">
                                 <div className="min-w-[60px] text-center p-2 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-gold-50 transition-colors">
                                    <p className="text-xs font-black text-slate-900 font-mono">{app.time}</p>
                                 </div>
-                                <div className="h-8 w-px bg-slate-100"></div>
+                                <div className="h-8 w-px bg-slate-100 hidden sm:block"></div>
                                 <div>
                                    <p className="text-sm font-black text-slate-900 group-hover:text-gold-600 transition-colors">{app.name}</p>
                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
@@ -580,13 +584,13 @@ export const Dashboard: React.FC = () => {
                                    </p>
                                 </div>
                              </div>
-                             <div className="flex items-center gap-4">
+                             <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
                                 <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full ${
                                   app.status === 'Completada' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gold-50 text-gold-600 border border-gold-100'
                                 }`}>
                                   {app.status}
                                 </span>
-                                <button className="p-2 opacity-0 group-hover:opacity-100 bg-white shadow-sm border border-slate-200 rounded-lg text-slate-400 hover:text-gold-600 transition-all">
+                                <button className="p-2 sm:opacity-0 sm:group-hover:opacity-100 bg-white shadow-sm border border-slate-200 rounded-lg text-slate-400 hover:text-gold-600 transition-all">
                                    <Settings className="w-4 h-4" />
                                 </button>
                              </div>
@@ -717,7 +721,7 @@ export const Dashboard: React.FC = () => {
                   {/* Performance Summary */}
                   <div className="bg-white border border-slate-100 rounded-[32px] p-8 relative overflow-hidden shadow-sm">
                     <div className="absolute -right-4 -top-4 w-32 h-32 bg-gold-500/5 rounded-full blur-3xl"></div>
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 relative z-10">
                        <div className="flex items-center gap-6">
                           <div className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center text-gold-500 font-black text-2xl italic shadow-xl shadow-black/20">A</div>
                           <div>
@@ -747,7 +751,7 @@ export const Dashboard: React.FC = () => {
                        <div className="divide-y divide-slate-100">
                           {appointments.filter(a => a.specialist === 'Ana').map((app) => (
                             <div key={app.id} className="p-8 hover:bg-slate-50/50 transition-all group">
-                               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                                   <div className="flex items-center gap-6">
                                      <div className="text-center">
                                         <p className="text-sm font-black text-slate-900 font-mono">{app.time}</p>
@@ -845,7 +849,7 @@ export const Dashboard: React.FC = () => {
                   {/* Welcome & Loyalty */}
                   <div className="bg-white border border-slate-100 rounded-[32px] p-8 relative overflow-hidden shadow-sm">
                     <div className="absolute -right-10 -top-10 w-48 h-48 bg-gold-500/5 rounded-full blur-3xl"></div>
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-8 relative z-10">
                        <div className="flex items-center gap-6">
                           <div className="w-16 h-16 rounded-full border-2 border-gold-500 p-1">
                              <img src="https://i.pravatar.cc/100?u=laura" className="w-full h-full rounded-full object-cover" alt="Perfil" />
@@ -893,22 +897,22 @@ export const Dashboard: React.FC = () => {
                             <p className="text-xs text-slate-400 font-bold uppercase">No tienes citas próximas</p>
                          </div>
                        ) : (
-                          appointments.filter(a => a.name === 'Laura Martínez' && a.status === 'Pendiente').map(app => (
-                            <div key={app.id} className="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-gold-500/30 transition-all">
+                           appointments.filter(a => a.name === 'Laura Martínez' && a.status === 'Pendiente').map(app => (
+                             <div key={app.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-gold-500/30 transition-all gap-6">
                                <div className="flex items-center gap-6">
-                                  <div className="text-center font-mono">
+                                  <div className="text-center font-mono shrink-0">
                                      <p className="text-sm font-black text-slate-900">{app.time}</p>
                                      <p className="text-[9px] text-slate-400 font-bold uppercase">4 May</p>
                                   </div>
-                                  <div className="h-8 w-px bg-slate-200"></div>
+                                  <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
                                   <div>
-                                     <p className="text-sm font-black text-slate-900 uppercase">{app.service}</p>
+                                     <p className="text-sm font-black text-slate-900 uppercase line-clamp-1">{app.service}</p>
                                      <p className="text-[10px] text-gold-600 font-bold uppercase tracking-widest">Especialista: {app.specialist}</p>
                                   </div>
                                </div>
-                               <div className="flex gap-3">
-                                  <button className="px-4 py-2 text-[10px] font-black uppercase text-slate-400 hover:text-rose-500">Cancelar</button>
-                                  <button className="px-4 py-2 bg-white border border-slate-200 text-[10px] font-black uppercase text-slate-900 rounded-xl shadow-sm hover:border-gold-500 transition-all">Reprogramar</button>
+                               <div className="flex gap-2 w-full sm:w-auto">
+                                  <button className="flex-1 sm:flex-none px-4 py-2 text-[10px] font-black uppercase text-slate-400 hover:text-rose-500 whitespace-nowrap">Cancelar</button>
+                                  <button className="flex-1 sm:flex-none px-4 py-2 bg-white border border-slate-200 text-[10px] font-black uppercase text-slate-900 rounded-xl shadow-sm hover:border-gold-500 transition-all whitespace-nowrap">Reprogramar</button>
                                </div>
                             </div>
                           ))
@@ -955,7 +959,7 @@ export const Dashboard: React.FC = () => {
 
         </main>
 
-        <footer className="mt-16 pt-10 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
+        <footer className="mt-16 pt-10 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-6 text-[10px] font-black tracking-[0.4em] uppercase text-slate-300">
              <span>v3.0.1 Stable Cloud</span>
              <span className="hidden md:block">|</span>
@@ -975,7 +979,7 @@ export const Dashboard: React.FC = () => {
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+            className="bg-white rounded-[32px] p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto"
           >
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Alta Nuevo Staff</h3>
             <div className="space-y-4">
@@ -1021,7 +1025,7 @@ export const Dashboard: React.FC = () => {
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+            className="bg-white rounded-[32px] p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto"
           >
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Ingreso de Mercancía</h3>
             <div className="space-y-4">
@@ -1096,7 +1100,7 @@ export const Dashboard: React.FC = () => {
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+            className="bg-white rounded-[32px] p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto"
           >
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Nueva Reservación</h3>
             <div className="space-y-4">
@@ -1154,7 +1158,7 @@ export const Dashboard: React.FC = () => {
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+            className="bg-white rounded-[32px] p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto"
           >
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Reportar Egreso</h3>
             <div className="space-y-4">
@@ -1185,11 +1189,11 @@ export const Dashboard: React.FC = () => {
       {/* MODAL: REGISTRAR VENTA */}
       {showSaleModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-[32px] p-8 w-full max-w-sm shadow-2xl border border-slate-100"
-          >
+            <motion.div 
+               initial={{ scale: 0.9, opacity: 0 }}
+               animate={{ scale: 1, opacity: 1 }}
+               className="bg-white rounded-[32px] p-6 sm:p-8 w-full max-w-sm shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
+            >
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Cobro Rápido</h3>
             <div className="space-y-4">
                <div>
@@ -1304,7 +1308,7 @@ export const Dashboard: React.FC = () => {
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+            className="bg-white rounded-[32px] p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto"
           >
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-6 italic">Editar Ticket #{ticketToEdit.id}</h3>
             <div className="space-y-4">
