@@ -329,17 +329,36 @@ export const Dashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Logs de Seguridad */}
-                  <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden shadow-2xl">
-                     <div className="absolute top-0 right-0 p-4 opacity-10"><Shield className="w-20 h-20" /></div>
-                     <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-6 opacity-40">Security Logs</h4>
-                     <div className="space-y-4 relative z-10">
-                        {['Acceso Admin: 22:59', 'Backup Cloud OK', 'Ticket #S3 Modificado'].map((log, i) => (
-                          <div key={i} className="flex items-center gap-3 text-[9px] font-mono opacity-60">
-                             <div className="w-1 h-1 bg-gold-500 rounded-full"></div> {log}
-                          </div>
-                        ))}
-                     </div>
+                  {/* Logs de Seguridad y Sync Operativo */}
+                  <div className="space-y-6">
+                    <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
+                       <div className="flex items-center gap-3 mb-6">
+                          <Package className="w-5 h-5 text-gold-600" />
+                          <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Stock Sync</h4>
+                       </div>
+                       <div className="space-y-4">
+                          {INVENTORY.slice(0, 2).map((item, i) => (
+                            <div key={i} className="flex justify-between items-center text-[10px] uppercase font-bold">
+                               <span className="text-slate-400">{item.name}</span>
+                               <span className={item.currentStock < 5 ? 'text-rose-500 font-black' : 'text-slate-900'}>
+                                 {item.currentStock} UNIDADES
+                               </span>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+
+                    <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden shadow-2xl">
+                       <div className="absolute top-0 right-0 p-4 opacity-10"><Shield className="w-20 h-20" /></div>
+                       <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-6 opacity-40">Security Logs</h4>
+                       <div className="space-y-4 relative z-10">
+                          {['Acceso Admin: 22:59', 'Backup Cloud OK', 'Ticket #S3 Modificado'].map((log, i) => (
+                            <div key={i} className="flex items-center gap-3 text-[9px] font-mono opacity-60">
+                               <div className="w-1 h-1 bg-gold-500 rounded-full"></div> {log}
+                            </div>
+                          ))}
+                       </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -348,85 +367,149 @@ export const Dashboard: React.FC = () => {
 
           {/* ROLE: RECEPCION */}
           {currentRole === 'recepcion' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8 space-y-6">
-                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
-                   <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 lg:space-y-12">
+              {/* Agenda y POS */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-7 bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm flex flex-col">
+                   <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
                       <div className="flex items-center gap-4">
-                        <Calendar className="w-5 h-5 text-gold-600" />
-                        <h3 className="text-slate-900 font-black uppercase text-sm tracking-widest">Agenda Global HOY</h3>
+                        <div className="p-2 bg-gold-500/10 rounded-xl">
+                          <Calendar className="w-5 h-5 text-gold-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-slate-900 font-black uppercase text-sm tracking-widest">Agenda Global</h3>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Gestión de Citas - {new Date().toLocaleDateString()}</p>
+                        </div>
                       </div>
-                      <span className="text-[10px] font-black text-gold-600 bg-gold-500/10 px-3 py-1 rounded-full">{APPOINTMENTS.length} CITAS</span>
+                      <div className="flex items-center gap-2">
+                        <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors"><BarChart3 className="w-4 h-4 text-slate-400" /></button>
+                        <span className="text-[10px] font-black text-white bg-slate-900 px-3 py-1 rounded-full">{APPOINTMENTS.length} HOY</span>
+                      </div>
                    </div>
-                   <div className="p-6">
-                      <div className="space-y-4">
+                   <div className="p-6 overflow-y-auto max-h-[500px]">
+                      <div className="space-y-3">
                         {APPOINTMENTS.map((app) => (
-                          <div key={app.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-gold-500/30 transition-all group shadow-xs">
-                             <div className="flex items-center gap-4 mb-3 sm:mb-0">
-                                <div className="p-3 bg-white border border-slate-200 rounded-xl group-hover:bg-gold-500/10 group-hover:border-gold-500/30 transition-colors">
-                                   <p className="text-xs font-black text-gold-600 font-mono">{app.time}</p>
+                          <div key={app.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-gold-500/30 transition-all hover:shadow-md group">
+                             <div className="flex items-center gap-4">
+                                <div className="min-w-[60px] text-center p-2 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-gold-50 transition-colors">
+                                   <p className="text-xs font-black text-slate-900 font-mono">{app.time}</p>
                                 </div>
+                                <div className="h-8 w-px bg-slate-100"></div>
                                 <div>
-                                   <p className="text-sm font-black text-slate-900">{app.name}</p>
-                                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{app.service} — {app.specialist}</p>
+                                   <p className="text-sm font-black text-slate-900 group-hover:text-gold-600 transition-colors">{app.name}</p>
+                                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                                      {app.service} <span className="w-1 h-1 bg-slate-200 rounded-full"></span> {app.specialist}
+                                   </p>
                                 </div>
                              </div>
-                             <div className="flex items-center gap-3 w-full sm:w-auto">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
-                                  app.status === 'Completada' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-gold-500/10 text-gold-600'
+                             <div className="flex items-center gap-4">
+                                <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full ${
+                                  app.status === 'Completada' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gold-50 text-gold-600 border border-gold-100'
                                 }`}>
                                   {app.status}
                                 </span>
-                                <button className="p-2 bg-white rounded-lg border border-slate-200 hover:border-gold-500 transition-all shadow-xs">
-                                   <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-gold-600" />
+                                <button className="p-2 opacity-0 group-hover:opacity-100 bg-white shadow-sm border border-slate-200 rounded-lg text-slate-400 hover:text-gold-600 transition-all">
+                                   <Settings className="w-4 h-4" />
                                 </button>
                              </div>
                           </div>
                         ))}
                       </div>
-                      <button className="w-full mt-6 py-4 bg-gold-500 text-black rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] transition-all shadow-lg shadow-gold-500/20">
-                        <PlusCircle className="w-4 h-4" /> Agendar Nueva Cita
+                      <button className="w-full mt-6 py-4 bg-slate-900 text-gold-500 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:scale-[1.01] transition-all shadow-xl shadow-black/5">
+                        <PlusCircle className="w-4 h-4" /> Nueva Reservación
                       </button>
                    </div>
                 </div>
+
+                <div className="lg:col-span-5 space-y-8">
+                  {/* Punto de Venta */}
+                  <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-5"><Wallet className="w-24 h-24 text-gold-500" /></div>
+                    <div className="flex items-center gap-4 mb-8 relative z-10">
+                      <div className="p-2 bg-emerald-500/10 rounded-xl">
+                        <CreditCard className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Caja y Punto de Venta</h4>
+                    </div>
+                    
+                    <div className="space-y-6 relative z-10">
+                      <div className="p-6 bg-slate-50 border border-slate-200 rounded-[24px] border-dashed flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-gold-500/5 hover:border-gold-500/30 transition-all">
+                         <div className="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
+                            <PlusCircle className="w-6 h-6 text-gold-500" />
+                         </div>
+                         <p className="text-slate-900 font-black uppercase text-xs">Registrar Venta</p>
+                         <p className="text-[10px] text-slate-400 font-medium mt-1">Servicio o Venta de Producto</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                         <button className="p-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-600 hover:border-gold-500 transition-all flex flex-col items-center gap-2">
+                            <Printer className="w-5 h-5 text-slate-400" /> Reimprimir Ticket
+                         </button>
+                         <button className="p-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-600 hover:border-gold-500 transition-all flex flex-col items-center gap-2">
+                            <LogOut className="w-5 h-5 text-rose-400" /> Cerrar Caja
+                         </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Inventario Rápido */}
+                  <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
+                    <div className="flex items-center justify-between mb-8">
+                       <div className="flex items-center gap-4">
+                         <div className="p-2 bg-slate-100 rounded-xl">
+                           <Package className="w-5 h-5 text-slate-600" />
+                         </div>
+                         <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Inventario</h4>
+                       </div>
+                    </div>
+                    <div className="space-y-4">
+                       <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div>
+                             <p className="text-[10px] font-black text-slate-900 uppercase">Shampoo Premium 500ml</p>
+                             <p className="text-[9px] text-slate-400 font-bold uppercase">Stock Actual: 12 unidades</p>
+                          </div>
+                          <button className="p-2 px-3 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-gold-600">+ ENTRADA</button>
+                       </div>
+                       <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div>
+                             <p className="text-[10px] font-black text-slate-900 uppercase">Tinte Gold Series</p>
+                             <p className="text-[9px] text-slate-400 font-bold uppercase">Stock Actual: 4 unidades</p>
+                          </div>
+                          <button className="p-2 px-3 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-gold-600">+ ENTRADA</button>
+                       </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="lg:col-span-4 space-y-8">
-                <div className="bg-white border border-slate-100 rounded-3xl p-8 space-y-6 shadow-sm">
-                   <div className="flex items-center gap-3">
-                      <CreditCard className="w-5 h-5 text-gold-600" />
-                      <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Cobro POS Express</h4>
-                   </div>
-                   <div className="p-10 bg-slate-50 border border-slate-200 border-dashed rounded-3xl flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-gold-500/5 hover:border-gold-500/30 transition-all">
-                      <div className="w-16 h-16 bg-white border border-slate-200 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-gold-500/30 transition-transform shadow-xs">
-                         <PlusCircle className="w-8 h-8 text-gold-500" />
+              {/* Gastos Operativos */}
+              <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
+                 <div className="flex justify-between items-center mb-8">
+                    <div className="flex items-center gap-4">
+                       <div className="p-2 bg-rose-500/10 rounded-xl">
+                         <AlertCircle className="w-5 h-5 text-rose-600" />
+                       </div>
+                       <div>
+                         <h4 className="text-slate-900 font-black uppercase text-sm tracking-widest">Gastos Operativos (Caja Chica)</h4>
+                         <p className="text-[10px] text-slate-400 font-bold uppercase">Registro de Egresos Diarios</p>
+                       </div>
+                    </div>
+                    <button className="p-2 px-6 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Reportar Gasto</button>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {EXPENSES.map((exp, i) => (
+                      <div key={i} className="flex justify-between items-center p-5 bg-slate-50 rounded-2xl border border-slate-100 group">
+                         <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-rose-500"><LogOut className="w-4 h-4 rotate-180" /></div>
+                            <div>
+                               <p className="text-xs font-black text-slate-900 line-clamp-1">{exp.description}</p>
+                               <p className="text-[9px] text-slate-400 font-bold uppercase">{exp.date}</p>
+                            </div>
+                         </div>
+                         <span className="text-sm font-black text-rose-500 font-mono">-${exp.amount.toFixed(0)}</span>
                       </div>
-                      <p className="text-slate-900 font-black uppercase text-xs">Cargar Servicio</p>
-                      <p className="text-[10px] text-slate-400 font-bold italic mt-1">Escanea o selecciona cliente</p>
-                   </div>
-                   <button className="w-full py-4 bg-slate-50 text-gold-600 rounded-2xl border border-slate-200 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-gold-500 hover:text-black hover:border-gold-500 transition-all shadow-xs">
-                     Historial de Transacciones
-                   </button>
-                </div>
-
-                <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm">
-                   <div className="flex justify-between items-center mb-6">
-                      <div className="flex items-center gap-3">
-                         <Package className="w-5 h-5 text-gold-600" />
-                         <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Gastos Caja</h4>
-                      </div>
-                      <PlusCircle className="w-4 h-4 text-gold-500 cursor-pointer" />
-                   </div>
-                   <div className="space-y-4">
-                      {EXPENSES.slice(0, 3).map((exp, i) => (
-                        <div key={i} className="flex justify-between items-center py-2 border-b border-slate-100">
-                           <span className="text-[10px] font-bold text-slate-400 uppercase">{exp.description}</span>
-                           <span className="text-xs font-black text-rose-500">-${exp.amount.toFixed(2)}</span>
-                        </div>
-                      ))}
-                      <p className="text-[9px] text-slate-300 font-black uppercase tracking-widest text-center italic mt-4">Todos los gastos deben ser autorizados</p>
-                   </div>
-                </div>
+                    ))}
+                 </div>
               </div>
             </motion.div>
           )}

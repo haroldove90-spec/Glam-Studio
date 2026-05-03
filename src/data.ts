@@ -10,8 +10,8 @@ export const APPOINTMENTS: Appointment[] = [
 ];
 
 export const EXPENSES: Expense[] = [
-  { description: 'Insumos básicos', amount: 450 },
-  { description: 'Reparación de secadora profesional', amount: 350 },
+  { description: 'Insumos básicos', amount: 450, date: '01 May' },
+  { description: 'Reparación de secadora profesional', amount: 350, date: '03 May' },
 ];
 
 export const MONTHLY_GOALS: MonthlyGoal[] = [

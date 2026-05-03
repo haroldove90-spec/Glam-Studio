@@ -36,6 +36,7 @@ export interface InventoryItem {
 export interface Expense {
   description: string;
   amount: number;
+  date: string;
 }
 
 export interface MonthlyGoal {
