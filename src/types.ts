@@ -1,5 +1,5 @@
 
-export type UserRole = 'especialista' | 'recepcion' | 'admin';
+export type UserRole = 'especialista' | 'recepcion' | 'admin' | 'cliente';
 
 export interface Appointment {
   id: string;
@@ -7,7 +7,8 @@ export interface Appointment {
   service: string;
   specialist: string;
   time: string;
-  status: 'Completada' | 'Pendiente' | 'Cancelada';
+  status: 'Completada' | 'Pendiente' | 'Cancelada' | 'En Proceso';
+  notes?: string;
 }
 
 export interface Sale {
@@ -19,6 +20,8 @@ export interface Sale {
   total: number;
   paymentMethod: 'Efectivo' | 'Tarjeta' | 'Transferencia';
   specialist: string;
+  date: string;
+  loyaltyPoints?: number;
 }
 
 export interface PendingPayment {

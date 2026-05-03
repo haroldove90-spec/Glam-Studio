@@ -172,7 +172,7 @@ export const Dashboard: React.FC = () => {
 
           <div className="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4">
              <div className="w-full sm:w-auto flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
-                {(['admin', 'recepcion', 'especialista'] as UserRole[]).map((role) => (
+                {(['admin', 'recepcion', 'especialista', 'cliente'] as UserRole[]).map((role) => (
                   <button
                     key={role}
                     onClick={() => setCurrentRole(role)}
@@ -516,82 +516,235 @@ export const Dashboard: React.FC = () => {
 
           {/* ROLE: ESPECIALISTA */}
           {currentRole === 'especialista' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8 space-y-8">
-                <div className="bg-white border border-slate-100 rounded-3xl p-8 relative overflow-hidden shadow-sm">
-                   <div className="absolute -right-4 -top-4 w-32 h-32 bg-gold-500/5 rounded-full blur-3xl opacity-30"></div>
-                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-                      <div>
-                         <h2 className="text-3xl font-black text-slate-900 italic tracking-tighter">Bienvenida, Ana</h2>
-                         <p className="text-[10px] text-gold-600 font-black uppercase tracking-[0.3em] mt-1">Estatus: Premium Specialist</p>
-                      </div>
-                      <div className="text-right">
-                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tu Comisión Hoy</p>
-                         <p className="text-5xl font-black text-gold-500 font-mono tracking-tighter">${anaPerformance?.total.toLocaleString()}</p>
-                      </div>
-                   </div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-8 space-y-8">
+                  {/* Performance Summary */}
+                  <div className="bg-white border border-slate-100 rounded-[32px] p-8 relative overflow-hidden shadow-sm">
+                    <div className="absolute -right-4 -top-4 w-32 h-32 bg-gold-500/5 rounded-full blur-3xl"></div>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                       <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center text-gold-500 font-black text-2xl italic shadow-xl shadow-black/20">A</div>
+                          <div>
+                            <h2 className="text-3xl font-black text-slate-900 italic tracking-tighter">Bienvenida, Ana</h2>
+                            <p className="text-[10px] text-gold-600 font-black uppercase tracking-[0.3em] mt-1 flex items-center gap-2">
+                               <ShieldCheck className="w-3 h-3" /> Nivel: Premium Specialist
+                            </p>
+                          </div>
+                       </div>
+                       <div className="text-right">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Comisión Generada (Mes)</p>
+                          <p className="text-5xl font-black text-gold-500 font-mono tracking-tighter">${(anaPerformance?.total || 0).toLocaleString()}</p>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Agenda Personal & Checklist */}
+                  <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
+                    <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                       <div className="flex items-center gap-4">
+                          <Calendar className="w-5 h-5 text-gold-600" />
+                          <h3 className="text-slate-900 font-black uppercase text-sm tracking-widest">Mi Agenda de Hoy</h3>
+                       </div>
+                       <span className="text-[10px] font-black text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full">{APPOINTMENTS.filter(a => a.specialist === 'Ana').length} CITAS</span>
+                    </div>
+                    <div className="p-0">
+                       <div className="divide-y divide-slate-100">
+                          {APPOINTMENTS.filter(a => a.specialist === 'Ana').map((app) => (
+                            <div key={app.id} className="p-8 hover:bg-slate-50/50 transition-all group">
+                               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                  <div className="flex items-center gap-6">
+                                     <div className="text-center">
+                                        <p className="text-sm font-black text-slate-900 font-mono">{app.time}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">HOY</p>
+                                     </div>
+                                     <div className="h-10 w-px bg-slate-200"></div>
+                                     <div>
+                                        <p className="text-lg font-black text-slate-900 uppercase">{app.name}</p>
+                                        <p className="text-[10px] text-gold-600 font-black uppercase tracking-widest mt-0.5">{app.service}</p>
+                                        {app.notes && (
+                                          <div className="mt-3 p-3 bg-gold-50 border border-gold-200 rounded-xl flex items-start gap-3">
+                                             <Info className="w-3.5 h-3.5 text-gold-600 mt-0.5 shrink-0" />
+                                             <p className="text-[10px] text-gold-700 font-medium leading-relaxed italic">
+                                                Ficha Técnica: {app.notes}
+                                             </p>
+                                          </div>
+                                        )}
+                                     </div>
+                                  </div>
+                                  <div className="flex items-center gap-4 w-full md:w-auto">
+                                     {app.status === 'Completada' ? (
+                                       <div className="w-full md:w-auto flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 font-black text-[10px] uppercase tracking-widest">
+                                          <CheckSquare className="w-4 h-4" /> Finalizado
+                                       </div>
+                                     ) : (
+                                       <button className="w-full md:w-auto px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gold-500 hover:text-black transition-all">
+                                          Iniciar / Cobrar
+                                       </button>
+                                     )}
+                                     <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 transition-all">
+                                        <FileText className="w-4 h-4" />
+                                     </button>
+                                  </div>
+                               </div>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
-                   <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center gap-4">
-                      <Scissors className="w-5 h-5 text-gold-600" />
-                      <h3 className="text-slate-900 font-black uppercase text-sm tracking-widest">Tus Servicios de Hoy</h3>
+                <div className="lg:col-span-4 space-y-8">
+                   {/* Meta & Incentivo */}
+                   <div className="bg-white border border-slate-100 rounded-[32px] p-8 flex flex-col items-center text-center shadow-sm">
+                      <div className="w-40 h-40 rounded-full border-8 border-slate-50 relative flex items-center justify-center mb-6 shadow-xs">
+                         <svg className="absolute -rotate-90 w-full h-full">
+                            <circle cx="80" cy="80" r="72" stroke="#f8fafc" strokeWidth="12" fill="transparent" />
+                            <circle cx="80" cy="80" r="72" stroke="#d4af37" strokeWidth="12" strokeDasharray="452.3" strokeDashoffset={452.3 * (1 - 0.72)} fill="transparent" strokeLinecap="round" />
+                         </svg>
+                         <div className="flex flex-col items-center">
+                            <span className="text-3xl font-black text-slate-900">72%</span>
+                            <span className="text-[8px] text-slate-400 font-bold uppercase mt-1">Avance</span>
+                         </div>
+                      </div>
+                      <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest mb-2">Meta de Ventas</h4>
+                      <p className="text-xs text-slate-400 font-medium px-4 italic leading-relaxed">Estás a solo <span className="text-gold-600 font-black">$1,800</span> del bono Platino de este mes.</p>
+                      <button className="mt-8 w-full py-4 bg-slate-50 border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gold-500 hover:text-black transition-all">
+                         Mi Historial de Bonos
+                      </button>
                    </div>
-                   <div className="p-0">
-                      <table className="w-full text-left">
-                        <thead className="text-[10px] text-slate-400 font-black uppercase border-b border-slate-100 bg-slate-50/50">
-                           <tr>
-                              <th className="px-8 py-4">Servicio Realizado</th>
-                              <th className="px-8 py-4">Total</th>
-                              <th className="px-8 py-4 text-right">Comisión</th>
-                           </tr>
-                        </thead>
-                        <tbody>
-                          {anaServices.map((s, i) => (
-                            <tr key={i} className="border-b border-slate-100 hover:bg-gold-50/50 transition-colors">
-                               <td className="px-8 py-6">
-                                  <p className="text-sm font-black text-slate-900">{s.service} <span className="text-[9px] text-slate-400 font-normal italic lowercase tracking-normal bg-slate-100 border border-slate-200 px-2 py-0.5 rounded ml-2">completado</span></p>
-                                  <p className="text-[10px] text-gold-600 uppercase font-black tracking-widest mt-0.5">Ticket #{s.id}</p>
-                               </td>
-                               <td className="px-8 py-6 font-mono text-xs text-slate-500">${s.servicePrice.toFixed(2)}</td>
-                               <td className="px-8 py-6 text-right font-black text-gold-600 font-mono text-sm">
-                                  +${(s.servicePrice * 0.3).toFixed(2)}
-                                </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+
+                   {/* Resumen Histórico Personal */}
+                   <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-6 opacity-10"><BarChart3 className="w-20 h-20" /></div>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-8 opacity-40">Desempeño Histórico</h4>
+                      <div className="space-y-6">
+                         {[
+                           { label: 'Servicios Totales', val: '124' },
+                           { label: 'Satisfacción', val: '4.9/5' },
+                           { label: 'Re-agendamiento', val: '86%' }
+                         ].map((stat, i) => (
+                           <div key={i} className="flex justify-between items-center">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">{stat.label}</span>
+                              <span className="text-sm font-black text-gold-500 italic">{stat.val}</span>
+                           </div>
+                         ))}
+                      </div>
                    </div>
                 </div>
               </div>
+            </motion.div>
+          )}
 
-              <div className="lg:col-span-4 space-y-8">
-                 <div className="bg-white border border-slate-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm">
-                    <div className="w-32 h-32 rounded-full border-4 border-slate-50 relative flex items-center justify-center mb-6 shadow-xs">
-                       <svg className="absolute -rotate-90 w-full h-full">
-                          <circle cx="64" cy="64" r="60" stroke="#f8fafc" strokeWidth="6" fill="transparent" />
-                          <circle cx="64" cy="64" r="60" stroke="#d4af37" strokeWidth="6" strokeDasharray="376" strokeDashoffset={376 * (1 - 0.72)} fill="transparent" strokeLinecap="round" />
-                       </svg>
-                       <span className="text-2xl font-black text-slate-900 italic">72%</span>
+          {/* ROLE: CLIENTE */}
+          {currentRole === 'cliente' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-8 space-y-8">
+                  {/* Welcome & Loyalty */}
+                  <div className="bg-white border border-slate-100 rounded-[32px] p-8 relative overflow-hidden shadow-sm">
+                    <div className="absolute -right-10 -top-10 w-48 h-48 bg-gold-500/5 rounded-full blur-3xl"></div>
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
+                       <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 rounded-full border-2 border-gold-500 p-1">
+                             <img src="https://i.pravatar.cc/100?u=laura" className="w-full h-full rounded-full object-cover" alt="Perfil" />
+                          </div>
+                          <div>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tighter italic">Hola, Laura</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Cliente VIP • Miembro desde 2024</p>
+                          </div>
+                       </div>
+                       <div className="flex bg-slate-900 px-8 py-4 rounded-3xl items-center gap-6 shadow-2xl">
+                          <div className="p-3 bg-gold-500 rounded-2xl shadow-lg shadow-gold-500/20">
+                             <Wallet className="w-6 h-6 text-black" />
+                          </div>
+                          <div>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Puntos de Lealtad</p>
+                             <p className="text-3xl font-black text-gold-500 font-mono tracking-tighter">1,240 <span className="text-[10px] uppercase italic text-slate-500 ml-1">pts</span></p>
+                          </div>
+                       </div>
                     </div>
-                    <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest mb-2">Meta Personal</h4>
-                    <p className="text-xs text-slate-400 font-medium px-8 italic">Buen trabajo Ana, estás muy cerca del bono nivel platino.</p>
-                    <button className="mt-8 w-full py-4 bg-slate-100 border border-slate-200 text-gold-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gold-500 hover:text-black transition-all shadow-xs">
-                       Ver Mis Bonos
-                    </button>
-                 </div>
+                  </div>
 
-                 <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm">
-                    <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest mb-6">Siguiente Cliente</h4>
-                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                       <p className="text-xs font-black text-gold-600 font-mono mb-1">11:30 AM</p>
-                       <p className="text-sm font-black text-slate-900 uppercase italic">Claudia R.</p>
-                       <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Uñas Acrílico + Gelish</p>
+                  {/* Agendar Nueva Cita */}
+                  <div className="bg-slate-900 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl group cursor-pointer">
+                     <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                        <Calendar className="w-32 h-32 text-gold-500" />
+                     </div>
+                     <div className="relative z-10">
+                        <h3 className="text-4xl font-black italic tracking-tighter mb-4">¿Lista para brillar?</h3>
+                        <p className="text-slate-400 text-sm max-w-md font-medium leading-relaxed mb-8">Reserva tu próximo servicio en segundos. Tenemos espacios disponibles para este fin de semana.</p>
+                        <button className="px-8 py-4 bg-gold-500 text-black rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-gold-500/20">
+                           Reservar Ahora
+                        </button>
+                     </div>
+                  </div>
+
+                  {/* Mis Citas Pendientes */}
+                  <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
+                    <h3 className="text-slate-900 font-black uppercase text-xs tracking-widest mb-6">Mis Próximas Citas</h3>
+                    <div className="space-y-4">
+                       {APPOINTMENTS.filter(a => a.name === 'Laura Martínez' && a.status === 'Pendiente').length === 0 ? (
+                         <div className="py-12 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                            <p className="text-xs text-slate-400 font-bold uppercase">No tienes citas próximas</p>
+                         </div>
+                       ) : (
+                          APPOINTMENTS.filter(a => a.name === 'Laura Martínez' && a.status === 'Pendiente').map(app => (
+                            <div key={app.id} className="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-gold-500/30 transition-all">
+                               <div className="flex items-center gap-6">
+                                  <div className="text-center font-mono">
+                                     <p className="text-sm font-black text-slate-900">{app.time}</p>
+                                     <p className="text-[9px] text-slate-400 font-bold uppercase">4 May</p>
+                                  </div>
+                                  <div className="h-8 w-px bg-slate-200"></div>
+                                  <div>
+                                     <p className="text-sm font-black text-slate-900 uppercase">{app.service}</p>
+                                     <p className="text-[10px] text-gold-600 font-bold uppercase tracking-widest">Especialista: {app.specialist}</p>
+                                  </div>
+                               </div>
+                               <div className="flex gap-3">
+                                  <button className="px-4 py-2 text-[10px] font-black uppercase text-slate-400 hover:text-rose-500">Cancelar</button>
+                                  <button className="px-4 py-2 bg-white border border-slate-200 text-[10px] font-black uppercase text-slate-900 rounded-xl shadow-sm hover:border-gold-500 transition-all">Reprogramar</button>
+                               </div>
+                            </div>
+                          ))
+                       )}
                     </div>
-                    <button className="w-full mt-6 py-3 bg-slate-100 border border-slate-200 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-xl hover:text-slate-900 transition-all shadow-xs">
-                       Gestionar Mi Agenda
-                    </button>
-                 </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-4 space-y-8">
+                   {/* Historial de Visitas */}
+                   <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
+                      <div className="flex items-center gap-4 mb-8">
+                         <div className="p-2 bg-slate-100 rounded-xl"><Smartphone className="w-5 h-5 text-slate-600" /></div>
+                         <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest">Mi Historial</h4>
+                      </div>
+                      <div className="space-y-6">
+                         {SALES.slice(0, 3).map((sale, i) => (
+                           <div key={i} className="flex items-start gap-4">
+                              <div className="mt-1 w-2 h-2 bg-gold-500 rounded-full shrink-0"></div>
+                              <div>
+                                 <p className="text-xs font-black text-slate-900 uppercase">{sale.service}</p>
+                                 <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">Viernes, 28 Abr • {sale.specialist}</p>
+                                 <p className="text-[9px] text-emerald-600 font-black mt-1">+{sale.loyaltyPoints} PUNTOS GANADOS</p>
+                              </div>
+                           </div>
+                         ))}
+                      </div>
+                      <button className="w-full mt-8 py-4 bg-slate-50 border border-slate-200 text-[10px] font-black uppercase text-slate-400 rounded-2xl hover:bg-slate-100 transition-all">Ver Historial Completo</button>
+                   </div>
+
+                   {/* Promo de Lealtad */}
+                   <div className="bg-gold-500 rounded-[32px] p-8 shadow-xl shadow-gold-500/20">
+                      <h4 className="text-black font-black uppercase text-xs tracking-widest mb-4">Próxima Recompensa</h4>
+                      <p className="text-black/60 text-xs font-bold leading-relaxed mb-6">Solo te faltan <span className="text-black font-black">260 puntos</span> para canjear un Tratamiento Capilar de Cortesía.</p>
+                      <div className="w-full h-1.5 bg-black/10 rounded-full overflow-hidden mb-6">
+                         <div className="h-full bg-black w-[82%]"></div>
+                      </div>
+                      <button className="w-full py-4 bg-black text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all">Ver Catálogo de Premios</button>
+                   </div>
+                </div>
               </div>
             </motion.div>
           )}

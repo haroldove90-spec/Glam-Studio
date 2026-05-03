@@ -1,11 +1,11 @@
 import { Appointment, Sale, Specialist, PendingPayment, InventoryItem, Expense, MonthlyGoal } from './types';
 
 export const APPOINTMENTS: Appointment[] = [
-  { id: '1', name: 'Laura Martínez', service: 'Corte y Peinado', specialist: 'Ana', time: '10:00 AM', status: 'Completada' },
-  { id: '2', name: 'Sofía Rodríguez', service: 'Manicura Spa', specialist: 'Roberto', time: '11:15 AM', status: 'Completada' },
-  { id: '3', name: 'Carlos Penagos', service: 'Limpieza Facial', specialist: 'Ana', time: '12:30 PM', status: 'Completada' },
-  { id: '4', name: 'Elena Gómez', service: 'Balayage', specialist: 'Ana', time: '03:00 PM', status: 'Pendiente' },
-  { id: '5', name: 'Marta Soto', service: 'Masaje Relajante', specialist: 'Roberto', time: '04:30 PM', status: 'Pendiente' },
+  { id: '1', name: 'Laura Martínez', service: 'Corte y Peinado', specialist: 'Ana', time: '10:00 AM', status: 'Completada', notes: 'Prefiere corte tipo bob, cabello lacio.' },
+  { id: '2', name: 'Sofía Rodríguez', service: 'Manicura Spa', specialist: 'Roberto', time: '11:15 AM', status: 'En Proceso', notes: 'Color sugerido: Rojo Cereza.' },
+  { id: '3', name: 'Carlos Penagos', service: 'Limpieza Facial', specialist: 'Ana', time: '12:30 PM', status: 'Completada', notes: 'Piel sensible, usar productos orgánicos.' },
+  { id: '4', name: 'Elena Gómez', service: 'Balayage', specialist: 'Ana', time: '03:00 PM', status: 'Pendiente', notes: 'Refuerzo de puntas, fórmula base 7.1.' },
+  { id: '5', name: 'Marta Soto', service: 'Masaje Relajante', specialist: 'Roberto', time: '04:30 PM', status: 'Pendiente', notes: 'Problemas en lumbar, masaje suave.' },
   { id: '6', name: 'Cliente Incógnito', service: 'Pestañas', specialist: 'Roberto', time: '05:00 PM', status: 'Cancelada' },
 ];
 
@@ -30,7 +30,9 @@ export const SALES: Sale[] = [
     productPrice: 25,
     total: 85.00, 
     paymentMethod: 'Tarjeta',
-    specialist: 'Ana'
+    specialist: 'Ana',
+    date: '03 May',
+    loyaltyPoints: 8
   },
   { 
     id: 'S2', 
@@ -40,7 +42,9 @@ export const SALES: Sale[] = [
     productPrice: 0,
     total: 45.00, 
     paymentMethod: 'Efectivo',
-    specialist: 'Roberto' 
+    specialist: 'Roberto',
+    date: '03 May',
+    loyaltyPoints: 4
   },
   { 
     id: 'S3', 
@@ -50,7 +54,9 @@ export const SALES: Sale[] = [
     productPrice: 60,
     total: 210.00, 
     paymentMethod: 'Transferencia',
-    specialist: 'Ana'
+    specialist: 'Ana',
+    date: '03 May',
+    loyaltyPoints: 21
   },
   { 
     id: 'S4', 
@@ -60,7 +66,9 @@ export const SALES: Sale[] = [
     productPrice: 0,
     total: 40.00, 
     paymentMethod: 'Tarjeta',
-    specialist: 'Carla' 
+    specialist: 'Carla',
+    date: '02 May',
+    loyaltyPoints: 4
   },
   { 
     id: 'S5', 
@@ -70,7 +78,9 @@ export const SALES: Sale[] = [
     productPrice: 0,
     total: 90.00, 
     paymentMethod: 'Efectivo',
-    specialist: 'Sofía' 
+    specialist: 'Sofía',
+    date: '02 May',
+    loyaltyPoints: 9
   },
 ];
 
