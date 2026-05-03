@@ -41,6 +41,7 @@ export const Dashboard: React.FC = () => {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
+  const [showBonusModal, setShowBonusModal] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
 
   const [ticketToPrint, setTicketToPrint] = useState<Sale | null>(null);
@@ -123,13 +124,14 @@ export const Dashboard: React.FC = () => {
     registerSale(app.service, servicePrice, app.specialist);
   };
 
-  const addAppointment = (name: string, service: string, specName: string, time: string) => {
+  const addAppointment = (name: string, service: string, specName: string, time: string, date?: string) => {
     const newApp = {
       id: `APP-${Date.now()}`,
       name,
       service,
       specialist: specName,
       time,
+      date: date || 'HOY',
       status: 'Pendiente' as const
     };
     setAppointments(prev => [newApp, ...prev]);
@@ -805,7 +807,10 @@ export const Dashboard: React.FC = () => {
                       </div>
                       <h4 className="text-slate-900 font-black uppercase text-xs tracking-widest mb-2">Meta de Ventas</h4>
                       <p className="text-xs text-slate-400 font-medium px-4 italic leading-relaxed">Estás a solo <span className="text-gold-600 font-black">$1,800</span> del bono Platino de este mes.</p>
-                      <button className="mt-8 w-full py-4 bg-slate-50 border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gold-500 hover:text-black transition-all">
+                      <button 
+                        onClick={() => setShowBonusModal(true)}
+                        className="mt-8 w-full py-4 bg-slate-50 border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gold-500 hover:text-black transition-all"
+                      >
                          Mi Historial de Bonos
                       </button>
                    </div>
@@ -1120,13 +1125,18 @@ export const Dashboard: React.FC = () => {
                     <input id="app-time" type="time" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" defaultValue="14:00" />
                   </div>
                </div>
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fecha</label>
+                  <input id="app-date" type="date" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm" defaultValue={new Date().toISOString().split('T')[0]} />
+               </div>
                <button 
                  onClick={() => {
                    const n = (document.getElementById('app-name') as HTMLInputElement).value;
                    const s = (document.getElementById('app-service') as HTMLSelectElement).value;
                    const sp = (document.getElementById('app-spec') as HTMLSelectElement).value;
                    const t = (document.getElementById('app-time') as HTMLInputElement).value;
-                   if(n) addAppointment(n, s, sp, t);
+                   const d = (document.getElementById('app-date') as HTMLInputElement).value;
+                   if(n) addAppointment(n, s, sp, t, d);
                  }}
                  className="w-full py-4 bg-slate-900 text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-black/10"
                >
@@ -1358,6 +1368,59 @@ export const Dashboard: React.FC = () => {
                  Guardar Cambios
                </button>
                <button onClick={() => setTicketToEdit(null)} className="w-full py-2 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: HISTORIAL DE BONOS */}
+      {showBonusModal && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100"
+          >
+            <div className="flex items-center gap-4 mb-8">
+               <div className="p-3 bg-gold-500 rounded-2xl">
+                  <TrendingUp className="w-6 h-6 text-black" />
+               </div>
+               <div>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest italic">Historial de Bonos</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">Ana • Desempeño 2026</p>
+               </div>
+            </div>
+
+            <div className="space-y-4">
+               {[
+                 { month: 'Abril 2026', type: 'Diamante', amount: 2500, status: 'Pagado' },
+                 { month: 'Marzo 2026', type: 'Platino', amount: 1800, status: 'Pagado' },
+                 { month: 'Febrero 2026', type: 'Oro', amount: 1200, status: 'Pagado' },
+               ].map((bonus, i) => (
+                 <div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center group hover:border-gold-500/20 transition-all">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase mb-1">{bonus.month}</p>
+                      <p className="text-sm font-black text-slate-900 uppercase">Nivel {bonus.type}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-black text-gold-600 font-mono">${bonus.amount}</p>
+                      <span className="text-[8px] font-black uppercase text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">{bonus.status}</span>
+                    </div>
+                 </div>
+               ))}
+               
+               <div className="pt-6 border-t border-slate-100">
+                  <div className="flex justify-between items-center mb-6">
+                    <p className="text-[10px] font-black text-slate-400 uppercase italic">Acumulado Anual</p>
+                    <p className="text-xl font-black text-slate-900 font-mono">$5,500.00</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowBonusModal(false)}
+                    className="w-full py-4 bg-slate-900 text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-black/10"
+                  >
+                    Entendido
+                  </button>
+               </div>
             </div>
           </motion.div>
         </div>
