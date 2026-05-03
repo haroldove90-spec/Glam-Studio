@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { 
   Calendar, CircleDollarSign, Scissors, UserCheck, Wallet, ChevronRight, 
   BarChart3, Package, CreditCard, ShieldCheck, TrendingUp, AlertCircle, 
-  CheckSquare, Printer, Settings, LogOut, Info, Smartphone, FileText, 
+  CheckSquare, Printer, Settings, LogOut, Info, Smartphone, FileText, Gift,
   UserPlus, Settings2, PlusCircle, DollarSign, Activity, Trash2, Shield
 } from 'lucide-react';
 import { 
@@ -268,24 +268,19 @@ export const Dashboard: React.FC = () => {
       
       <div className="w-full max-w-[1400px] min-h-screen bg-[#F8FAFC] font-sans text-slate-500 flex flex-col p-4 sm:p-6 md:p-10 mx-auto selection:bg-gold-500 selection:text-black">
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 sm:mb-12 gap-6 sm:gap-8">
-          <div className="flex items-center gap-4 sm:gap-6 group">
+          <div className="flex items-center gap-4 group">
             <div className="relative">
               <img 
                 src="https://cossma.com.mx/glamstudio.png" 
                 alt="Logo" 
-                className="h-10 sm:h-16 object-contain grayscale group-hover:grayscale-0 transition-all duration-700" 
+                className="h-16 sm:h-20 object-contain grayscale group-hover:grayscale-0 transition-all duration-700" 
               />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gold-500 rounded-full flex items-center justify-center border-2 border-[#F8FAFC]">
-                 <ShieldCheck className="w-2.5 h-2.5 text-black" />
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gold-500 rounded-full flex items-center justify-center border-2 border-[#F8FAFC]">
+                 <ShieldCheck className="w-3 h-3 text-black" />
               </div>
             </div>
-            <div className="h-10 w-px bg-slate-200 hidden sm:block"></div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-[0.25em] text-slate-900 uppercase flex items-center gap-3 italic">
-                Management
-                <span className="text-[9px] bg-black text-gold-500 px-2 py-0.5 rounded font-black tracking-normal not-italic">{currentRole.toUpperCase()}</span>
-              </h1>
-              <p className="text-[10px] text-gold-600 font-black tracking-[0.4em] mt-1 opacity-60">CORE OPERATING SYSTEM v3.1</p>
+            <div className="flex flex-col">
+              <span className="text-[10px] bg-black text-gold-500 px-2 py-0.5 rounded font-black tracking-widest uppercase mb-1 w-fit">{currentRole}</span>
             </div>
           </div>
 
