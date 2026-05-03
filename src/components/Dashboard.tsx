@@ -42,6 +42,8 @@ export const Dashboard: React.FC = () => {
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [showBonusModal, setShowBonusModal] = useState(false);
+  const [showClientHistoryModal, setShowClientHistoryModal] = useState(false);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
 
   const [ticketToPrint, setTicketToPrint] = useState<Sale | null>(null);
@@ -852,7 +854,7 @@ export const Dashboard: React.FC = () => {
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-8 relative z-10">
                        <div className="flex items-center gap-6">
                           <div className="w-16 h-16 rounded-full border-2 border-gold-500 p-1">
-                             <img src="https://i.pravatar.cc/100?u=laura" className="w-full h-full rounded-full object-cover" alt="Perfil" />
+                             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ98U_wEjHe5AFs4PGz1fkXSE2kIxMCAvSQMw&s" className="w-full h-full rounded-full object-cover" alt="Perfil" />
                           </div>
                           <div>
                             <h2 className="text-3xl font-black text-slate-900 tracking-tighter italic">Hola, Laura</h2>
@@ -940,7 +942,12 @@ export const Dashboard: React.FC = () => {
                            </div>
                          ))}
                       </div>
-                      <button className="w-full mt-8 py-4 bg-slate-50 border border-slate-200 text-[10px] font-black uppercase text-slate-400 rounded-2xl hover:bg-slate-100 transition-all">Ver Historial Completo</button>
+                      <button 
+                        onClick={() => setShowClientHistoryModal(true)}
+                        className="w-full mt-8 py-4 bg-slate-50 border border-slate-200 text-[10px] font-black uppercase text-slate-400 rounded-2xl hover:bg-slate-100 transition-all"
+                      >
+                        Ver Historial Completo
+                      </button>
                    </div>
 
                    {/* Promo de Lealtad */}
@@ -950,10 +957,15 @@ export const Dashboard: React.FC = () => {
                       <div className="w-full h-1.5 bg-black/10 rounded-full overflow-hidden mb-6">
                          <div className="h-full bg-black w-[82%]"></div>
                       </div>
-                      <button className="w-full py-4 bg-black text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all">Ver Catálogo de Premios</button>
+                      <button 
+                        onClick={() => setShowRewardsModal(true)}
+                        className="w-full py-4 bg-black text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                      >
+                        Ver Catálogo de Premios
+                      </button>
+                   </div>
                    </div>
                 </div>
-              </div>
             </motion.div>
           )}
 
@@ -1426,6 +1438,127 @@ export const Dashboard: React.FC = () => {
                   </button>
                </div>
             </div>
+          </motion.div>
+        </div>
+      )}
+      {/* MODAL: HISTORIAL COMPLETO CLIENTE */}
+      {showClientHistoryModal && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-8">
+               <div className="flex items-center gap-4">
+                  <div className="p-3 bg-slate-900 rounded-2xl">
+                     <Smartphone className="w-6 h-6 text-gold-500" />
+                  </div>
+                  <div>
+                     <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest italic">Historial de Visitas</h3>
+                     <p className="text-[10px] text-slate-400 font-bold uppercase">Laura Martínez • Miembro Oro</p>
+                  </div>
+               </div>
+               <button onClick={() => setShowClientHistoryModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                  <span className="text-2xl">&times;</span>
+               </button>
+            </div>
+
+            <div className="space-y-4">
+               {[...sales, ...sales].slice(0, 10).map((sale, i) => (
+                 <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group hover:border-gold-500/20 transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="text-center font-mono shrink-0">
+                         <p className="text-xs font-black text-slate-900">{sale.date}</p>
+                         <p className="text-[9px] text-slate-400 font-bold uppercase">Finalizado</p>
+                      </div>
+                      <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                      <div>
+                         <p className="text-sm font-black text-slate-900 uppercase">{sale.service}</p>
+                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Especialista: {sale.specialist}</p>
+                      </div>
+                    </div>
+                    <div className="text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end">
+                      <p className="text-lg font-black text-slate-900 font-mono">${sale.total.toFixed(2)}</p>
+                      <p className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">+{sale.loyaltyPoints} PTS</p>
+                    </div>
+                 </div>
+               ))}
+               
+               <div className="pt-6 border-t border-slate-100">
+                  <button 
+                    onClick={() => setShowClientHistoryModal(false)}
+                    className="w-full py-4 bg-slate-900 text-gold-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-black/10"
+                  >
+                    Cerrar Historial
+                  </button>
+               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: CATÁLOGO DE PREMIOS */}
+      {showRewardsModal && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[32px] p-8 w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-8">
+               <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gold-500 rounded-2xl shadow-lg shadow-gold-500/20">
+                     <Gift className="w-6 h-6 text-black" />
+                  </div>
+                  <div>
+                     <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest italic">Catálogo de Premios</h3>
+                     <p className="text-[10px] text-slate-400 font-bold uppercase">Canjea tus puntos por recompensas</p>
+                  </div>
+               </div>
+               <div className="text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tus Puntos</p>
+                  <p className="text-2xl font-black text-gold-600 font-mono">1,240</p>
+               </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               {[
+                 { title: 'Corte de Dama', points: 500, desc: 'Cualquier estilo, incluye lavado.' },
+                 { title: 'Tratamiento Capilar', points: 800, desc: 'Hidratación profunda con mascarilla.' },
+                 { title: 'Peinado Social', points: 1200, desc: 'Ideal para eventos o graduaciones.' },
+                 { title: 'Balayage Premium', points: 5000, desc: 'Técnica de color avanzada.' },
+                 { title: 'Set de Productos', points: 3000, desc: 'Kit de mantenimiento en casa.' },
+                 { title: 'Manicure Express', points: 400, desc: 'Esmaltado básico y limpieza.' },
+               ].map((reward, i) => (
+                 <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between group hover:border-gold-500/30 transition-all">
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="text-sm font-black text-slate-900 uppercase">{reward.title}</h4>
+                        <span className="text-[10px] font-black text-gold-600 bg-gold-50 px-2 py-0.5 rounded-full">{reward.points} PTS</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 leading-relaxed mb-6">{reward.desc}</p>
+                    </div>
+                    <button 
+                      className={`w-full py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                        1240 >= reward.points 
+                          ? 'bg-slate-900 text-gold-500 hover:bg-black' 
+                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
+                      disabled={1240 < reward.points}
+                    >
+                      {1240 >= reward.points ? 'Canjear Premio' : `Faltan ${reward.points - 1240} pts`}
+                    </button>
+                 </div>
+               ))}
+            </div>
+
+            <button 
+              onClick={() => setShowRewardsModal(false)}
+              className="w-full mt-8 py-4 border border-slate-200 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all"
+            >
+              Regresar
+            </button>
           </motion.div>
         </div>
       )}
